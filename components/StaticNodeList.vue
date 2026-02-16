@@ -8,15 +8,30 @@
     <UTable :data="nodes || []" :columns="columns" :loading="pending">
       <template #content-cell="{ row }">
         <UTooltip :text="row.original.content">
-          <p class="max-w-[11rem] sm:max-w-[18rem] xl:max-w-[26rem] truncate rounded border border-default/70 bg-muted/20 px-2 py-1 font-mono text-xs text-toned">
+          <p
+            class="max-w-[11rem] sm:max-w-[18rem] xl:max-w-[26rem] truncate rounded border border-default/70 bg-muted/20 px-2 py-1 font-mono text-xs text-toned"
+          >
             {{ row.original.content }}
           </p>
         </UTooltip>
       </template>
       <template #actions-cell="{ row }">
         <div class="flex space-x-2">
-          <UButton @click="openEditDialog(row.original)" size="xs" variant="ghost" color="primary" icon="i-heroicons-pencil-square" title="Edit Static Node" />
-          <UButton @click="openDeleteDialog(row.original._id)" size="xs" variant="ghost" color="error" icon="i-heroicons-trash" />
+          <UButton
+            @click="openEditDialog(row.original)"
+            size="xs"
+            variant="ghost"
+            color="primary"
+            icon="i-heroicons-pencil-square"
+            title="Edit Static Node"
+          />
+          <UButton
+            @click="openDeleteDialog(row.original._id)"
+            size="xs"
+            variant="ghost"
+            color="error"
+            icon="i-heroicons-trash"
+          />
         </div>
       </template>
     </UTable>
@@ -35,10 +50,18 @@
               <UInput v-model="newItem.name" class="w-full" required />
             </UFormField>
             <UFormField class="w-full" label="Content (URI)">
-              <UTextarea v-model="newItem.content" class="w-full" required rows="4" placeholder="vmess://..." />
+              <UTextarea
+                v-model="newItem.content"
+                class="w-full"
+                required
+                rows="4"
+                placeholder="vmess://..."
+              />
             </UFormField>
             <div class="flex justify-end space-x-2">
-              <UButton type="button" variant="ghost" @click="isOpen = false">Cancel</UButton>
+              <UButton type="button" variant="ghost" @click="isOpen = false"
+                >Cancel</UButton
+              >
               <UButton type="submit" :loading="creating">Add</UButton>
             </div>
           </form>
@@ -59,10 +82,18 @@
               <UInput v-model="editItem.name" class="w-full" required />
             </UFormField>
             <UFormField class="w-full" label="Content (URI)">
-              <UTextarea v-model="editItem.content" class="w-full" required rows="4" placeholder="vmess://..." />
+              <UTextarea
+                v-model="editItem.content"
+                class="w-full"
+                required
+                rows="4"
+                placeholder="vmess://..."
+              />
             </UFormField>
             <div class="flex justify-end space-x-2">
-              <UButton type="button" variant="ghost" @click="closeEditDialog">Cancel</UButton>
+              <UButton type="button" variant="ghost" @click="closeEditDialog"
+                >Cancel</UButton
+              >
               <UButton type="submit" :loading="updating">Save Changes</UButton>
             </div>
           </form>
@@ -84,27 +115,31 @@
 
 <script setup lang="ts">
 const props = defineProps<{
-  scope: 'USER' | 'GLOBAL';
+  scope: "USER" | "GLOBAL";
   userId?: string;
 }>();
 
 const columns = [
-  { accessorKey: 'name', header: 'Name' },
-  { accessorKey: 'content', header: 'Content' },
-  { accessorKey: 'actions', header: 'Actions' }
+  { accessorKey: "name", header: "Name" },
+  { accessorKey: "content", header: "Content" },
+  { accessorKey: "actions", header: "Actions" },
 ];
 
-const { data: nodes, refresh, pending } = await useFetch('/api/admin/static-nodes', {
-  query: { scope: props.scope, userId: props.userId }
+const {
+  data: nodes,
+  refresh,
+  pending,
+} = await useFetch("/api/admin/static-nodes", {
+  query: { scope: props.scope, userId: props.userId },
 });
 
 const isOpen = ref(false);
 const creating = ref(false);
-const newItem = ref({ name: '', content: '' });
+const newItem = ref({ name: "", content: "" });
 const editDialogOpen = ref(false);
 const updating = ref(false);
 const editingId = ref<string | null>(null);
-const editItem = ref({ name: '', content: '' });
+const editItem = ref({ name: "", content: "" });
 const deleteDialogOpen = ref(false);
 const deletingItem = ref(false);
 const deletingId = ref<string | null>(null);
@@ -113,19 +148,19 @@ const toast = useToast();
 const createItem = async () => {
   creating.value = true;
   try {
-    await $fetch('/api/admin/static-nodes', {
-      method: 'POST',
+    await $fetch("/api/admin/static-nodes", {
+      method: "POST",
       body: {
         ...newItem.value,
         scope: props.scope,
-        userId: props.userId
-      }
+        userId: props.userId,
+      },
     });
     isOpen.value = false;
-    newItem.value = { name: '', content: '' };
+    newItem.value = { name: "", content: "" };
     refresh();
   } catch (e: any) {
-    toast.add({ title: 'Error', description: e.data?.message, color: 'error' });
+    toast.add({ title: "Error", description: e.data?.message, color: "error" });
   } finally {
     creating.value = false;
   }
@@ -134,8 +169,8 @@ const createItem = async () => {
 const openEditDialog = (item: any) => {
   editingId.value = item._id;
   editItem.value = {
-    name: item.name || '',
-    content: item.content || ''
+    name: item.name || "",
+    content: item.content || "",
   };
   editDialogOpen.value = true;
 };
@@ -150,17 +185,21 @@ const updateItem = async () => {
   updating.value = true;
   try {
     await $fetch(`/api/admin/static-nodes/${editingId.value}`, {
-      method: 'PUT',
+      method: "PUT",
       body: {
         name: editItem.value.name,
-        content: editItem.value.content
-      }
+        content: editItem.value.content,
+      },
     });
     refresh();
     closeEditDialog();
-    toast.add({ title: 'Static node updated', color: 'primary' });
+    toast.add({ title: "Static node updated", color: "primary" });
   } catch (e: any) {
-    toast.add({ title: 'Error', description: e.data?.message || e.message, color: 'error' });
+    toast.add({
+      title: "Error",
+      description: e.data?.message || e.message,
+      color: "error",
+    });
   } finally {
     updating.value = false;
   }
@@ -175,12 +214,14 @@ const deleteItem = async () => {
   if (!deletingId.value) return;
   deletingItem.value = true;
   try {
-    await $fetch(`/api/admin/static-nodes/${deletingId.value}`, { method: 'DELETE' });
+    await $fetch(`/api/admin/static-nodes/${deletingId.value}`, {
+      method: "DELETE",
+    });
     refresh();
     deleteDialogOpen.value = false;
     deletingId.value = null;
   } catch (e: any) {
-    toast.add({ title: 'Error', description: e.data?.message, color: 'error' });
+    toast.add({ title: "Error", description: e.data?.message, color: "error" });
   } finally {
     deletingItem.value = false;
   }

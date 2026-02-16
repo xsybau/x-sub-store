@@ -3,6 +3,7 @@
 A Docker-first, secure V2Ray subscription aggregator and management system.
 
 ## Features
+
 - **Centralized Hub**: Merge multiple subscriptions (Hiddify, Xray, etc.) into one.
 - **Admin Panel**: Manage users, upstream sources, and static nodes.
 - **Secure**: Per-user secret tokens, no public signup, encrypted token storage.
@@ -42,12 +43,14 @@ This runs a separate dev composition (`app`, `mongo`, `nginx`) and uses local ce
 `DEV_DOMAIN` defaults to `localhost` (override it if needed, e.g. `DEV_DOMAIN=api.localhost`).
 Nuxt source is mounted for hot reload. Dependency cache, Nuxt/Nitro cache, and MongoDB data are persisted in named Docker volumes.
 Start the dev server manually:
+
 ```bash
 docker exec -it ss-app ash
 bun dev
 ```
 
 Access:
+
 - `https://localhost/admin`
 
 ## Production Deployment
@@ -72,16 +75,19 @@ Access:
 ## Management
 
 ### Managing Users
+
 - Login to Admin Panel.
 - Create users. Each user gets a unique Subscription URL.
 - Give this URL to the user for their V2Ray client (v2rayNG, V2Box, etc.).
 
 ### Managing Upstreams
+
 - **Global**: Applies to ALL users.
 - **User**: Applies to specific user only.
 - Supports raw text lists or base64 subscription links.
 
 ### Token Rotation
+
 - In User details, click "Rotate Token" to invalidate the old URL and generate a new one immediately.
 
 ## Development

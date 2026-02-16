@@ -24,7 +24,11 @@
             @click="toggleUserActive(row.original)"
             variant="ghost"
             :color="row.original.isActive ? 'warning' : 'success'"
-            :icon="row.original.isActive ? 'i-heroicons-pause-circle' : 'i-heroicons-play-circle'"
+            :icon="
+              row.original.isActive
+                ? 'i-heroicons-pause-circle'
+                : 'i-heroicons-play-circle'
+            "
             :loading="togglingUserId === row.original._id"
             :title="row.original.isActive ? 'Deactivate User' : 'Activate User'"
           />
@@ -169,7 +173,11 @@ const columns = [
   { accessorKey: "actions", header: "Actions" },
 ];
 
-const { data: usersRaw, refresh, pending } = await useFetch<any[]>("/api/admin/users", {
+const {
+  data: usersRaw,
+  refresh,
+  pending,
+} = await useFetch<any[]>("/api/admin/users", {
   server: false,
 });
 const users = computed<UserRow[]>(() => {
