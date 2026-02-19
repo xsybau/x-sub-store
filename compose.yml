@@ -1,0 +1,83 @@
+name: x-sub-store-prod
+
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - NODE_ENV=production
+      - NITRO_PORT=3000
+      - NITRO_HOST=0.0.0.0
+      - NUXT_PORT=3000
+      - NUXT_HOST=0.0.0.0
+      - NUXT_APP_SECRET=${APP_SECRET:-}
+      - NUXT_ADMIN_SESSION_SECRET=${ADMIN_SESSION_SECRET:-}
+      - NUXT_MONGO_URI=${MONGO_URL:-}
+      - NUXT_ADMIN_AUTH_TOKEN_EXPIRES_SECONDS=${ADMIN_AUTH_TOKEN_EXPIRES_SECONDS:-86400}
+      - NUXT_ADMIN_REFRESH_TOKEN_EXPIRES_SECONDS=${ADMIN_REFRESH_TOKEN_EXPIRES_SECONDS:-604800}
+      - NUXT_ADMIN_AUTH_PRIVATE_KEY=${ADMIN_AUTH_PRIVATE_KEY:-}
+      - NUXT_ADMIN_AUTH_PUBLIC_KEY=${ADMIN_AUTH_PUBLIC_KEY:-}
+      - NUXT_ADMIN_REFRESH_PRIVATE_KEY=${ADMIN_REFRESH_PRIVATE_KEY:-}
+      - NUXT_ADMIN_REFRESH_PUBLIC_KEY=${ADMIN_REFRESH_PUBLIC_KEY:-}
+      - MONGO_URI=mongodb://mongo:27017/v2ray-hub
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - v2ray-hub-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  mongo:
+    image: mongo:6
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - v2ray-hub-net
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/templates:/etc/nginx/templates
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    env_file: .env
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - v2ray-hub-net
+    healthcheck:
+      test: ["CMD-SHELL", "nginx -t -q || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    networks:
+      - v2ray-hub-net
+
+volumes:
+  mongo_data:
+
+networks:
+  v2ray-hub-net:
