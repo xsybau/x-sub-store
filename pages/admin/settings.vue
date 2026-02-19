@@ -25,7 +25,11 @@
 
 <script setup lang="ts">
 definePageMeta({
+  title: 'Global Settings',
   layout: 'admin',
   middleware: 'auth'
+});
+useHead({
+  title: "Global Settings",
 });
 </script>

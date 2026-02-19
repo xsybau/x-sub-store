@@ -196,6 +196,7 @@
 
 <script setup lang="ts">
 definePageMeta({
+  title: "Users",
   layout: "admin",
   middleware: "auth",
 });
@@ -207,6 +208,13 @@ const { data: user, refresh } = await useFetch(
     server: false,
   },
 );
+const userPageTitle = computed(() => {
+  const label = user.value?.label?.trim();
+  return label ? `${label} - Users` : "Users";
+});
+useHead(() => ({
+  title: userPageTitle.value,
+}));
 const toast = useToast();
 const showPreview = ref(false);
 const previewData = ref<any>(null);

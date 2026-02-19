@@ -147,8 +147,12 @@
 
 <script setup lang="ts">
 definePageMeta({
+  title: "Users",
   layout: "admin",
   middleware: "auth",
+});
+useHead({
+  title: "Users",
 });
 
 interface UserRow {
