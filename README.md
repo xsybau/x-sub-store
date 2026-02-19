@@ -17,7 +17,11 @@ A Docker-first, secure V2Ray subscription aggregator and management system.
    ```bash
    docker compose -f compose.dev.yml up -d
    ```
-4. The app container auto-starts Nuxt dev and only re-runs `bun install` when dependencies change.
+4. Start Nuxt dev server inside the app container:
+   ```bash
+   docker exec -it ss-app ash
+   bun dev
+   ```
 5. Create an admin user (in another terminal):
    ```bash
    docker compose -f compose.dev.yml exec app bun run scripts/create-admin.ts --email admin@example.com --password secret
@@ -37,6 +41,11 @@ docker compose -f compose.dev.yml up -d
 This runs a separate dev composition (`app`, `mongo`, `nginx`) and uses local certs from `nginx/cert-local`.
 `DEV_DOMAIN` defaults to `localhost` (override it if needed, e.g. `DEV_DOMAIN=api.localhost`).
 Nuxt source is mounted for hot reload. Dependency cache, Nuxt/Nitro cache, and MongoDB data are persisted in named Docker volumes.
+Start the dev server manually:
+```bash
+docker exec -it ss-app ash
+bun dev
+```
 
 Access:
 - `https://localhost/admin`

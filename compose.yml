@@ -2,6 +2,7 @@ name: x-sub-store-prod
 
 services:
   app:
+    container_name: ss-app-prod
     build:
       context: .
       dockerfile: Dockerfile
@@ -37,10 +38,11 @@ services:
       start_period: 30s
 
   mongo:
+    container_name: ss-mongo-prod
     image: mongo:6
     restart: unless-stopped
     volumes:
-      - mongo_data:/data/db
+      - /tmp/x-sub-store/prod/mongo-data:/data/db
     networks:
       - v2ray-hub-net
     healthcheck:
@@ -50,6 +52,7 @@ services:
       retries: 3
 
   nginx:
+    container_name: ss-nginx-prod
     image: nginx:alpine
     restart: unless-stopped
     ports:
@@ -72,16 +75,13 @@ services:
       retries: 3
 
   certbot:
+    container_name: ss-certbot-prod
     image: certbot/certbot
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
     networks:
       - v2ray-hub-net
-
-volumes:
-  mongo_data:
-    name: x-sub-store-prod-mongo-data
 
 networks:
   v2ray-hub-net:

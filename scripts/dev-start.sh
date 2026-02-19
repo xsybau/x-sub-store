@@ -2,6 +2,7 @@
 set -eu
 
 DEPS_HASH_FILE="node_modules/.deps-hash"
+MODE="${1:-run-dev}"
 
 compute_deps_hash() {
   if [ -f bun.lock ]; then
@@ -37,4 +38,14 @@ else
   echo "Dependencies are up to date. Skipping install."
 fi
 
-exec bun run dev --host 0.0.0.0 --port 3000
+if [ "$MODE" = "--install-only" ]; then
+  exit 0
+fi
+
+if [ "$MODE" = "run-dev" ]; then
+  exec bun run dev --host 0.0.0.0 --port 3000
+fi
+
+echo "Unknown mode: $MODE"
+echo "Usage: sh scripts/dev-start.sh [--install-only|run-dev]"
+exit 1
