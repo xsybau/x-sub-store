@@ -1,13 +1,15 @@
+# syntax=docker/dockerfile:1.7
+
 # Stage 1: Build
 FROM oven/bun:1-alpine as build
 
 WORKDIR /app
 
-# Copy package files
-COPY package.json bun.lock ./
+# Copy package file first so dependency install can stay cached.
+COPY package.json ./
 
-# Install dependencies
-RUN bun install --frozen-lockfile
+# Install dependencies with BuildKit cache.
+RUN --mount=type=cache,target=/root/.bun/install/cache bun install
 
 # Copy source
 COPY . .

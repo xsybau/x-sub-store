@@ -2,7 +2,10 @@ name: x-sub-store-prod
 
 services:
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: x-sub-store-app:prod
     restart: unless-stopped
     env_file: .env
     environment:
@@ -78,6 +81,7 @@ services:
 
 volumes:
   mongo_data:
+    name: x-sub-store-prod-mongo-data
 
 networks:
   v2ray-hub-net:

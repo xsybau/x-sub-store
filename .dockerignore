@@ -1,0 +1,16 @@
+.git
+.gitignore
+
+# Local runtime/build outputs
+node_modules
+.nuxt
+.output
+.nitro
+.cache
+dist
+
+# Local-only files
+.env
+.env.*
+certbot
+nginx/cert-local

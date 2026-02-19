@@ -13,15 +13,11 @@ A Docker-first, secure V2Ray subscription aggregator and management system.
 
 1. Clone the repo.
 2. `cp .env.example .env` and edit it.
-3. Start the stack:
+3. Start the stack (first run builds the image, later runs reuse it):
    ```bash
-   docker compose -f compose.dev.yml up -d --build
+   docker compose -f compose.dev.yml up -d
    ```
-4. Start Nuxt dev server inside the app container:
-   ```bash
-   docker exec -it ss-app ash
-   bun dev
-   ```
+4. The app container auto-starts Nuxt dev and only re-runs `bun install` when dependencies change.
 5. Create an admin user (in another terminal):
    ```bash
    docker compose -f compose.dev.yml exec app bun run scripts/create-admin.ts --email admin@example.com --password secret
@@ -35,12 +31,12 @@ A Docker-first, secure V2Ray subscription aggregator and management system.
 Use the standalone dev stack:
 
 ```bash
-docker compose -f compose.dev.yml up -d --build
+docker compose -f compose.dev.yml up -d
 ```
 
 This runs a separate dev composition (`app`, `mongo`, `nginx`) and uses local certs from `nginx/cert-local`.
 `DEV_DOMAIN` defaults to `localhost` (override it if needed, e.g. `DEV_DOMAIN=api.localhost`).
-Nuxt source is mounted; run `bun dev` manually inside `ss-app` for hot reload.
+Nuxt source is mounted for hot reload. Dependency cache, Nuxt/Nitro cache, and MongoDB data are persisted in named Docker volumes.
 
 Access:
 - `https://localhost/admin`
@@ -53,11 +49,16 @@ Access:
    chmod +x ops/ssl/init.sh
    ./ops/ssl/init.sh
    ```
-3. Start production stack:
+3. Build and start production stack:
    ```bash
    docker compose -f compose.yml up -d --build
    ```
-4. The app will be available at `https://your-domain.com`.
+4. For normal restarts, do not rebuild:
+   ```bash
+   docker compose -f compose.yml up -d
+   ```
+5. MongoDB data is persisted in a named Docker volume.
+6. The app will be available at `https://your-domain.com`.
 
 ## Management
 
