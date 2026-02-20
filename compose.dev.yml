@@ -9,7 +9,6 @@ services:
     image: x-sub-store-app:dev
     restart: unless-stopped
     env_file: .env
-    command: sh -c "/app/scripts/dev-start.sh --install-only && while true; do sleep 3600; done"
     stdin_open: true
     tty: true
     depends_on:

@@ -20,9 +20,10 @@ X-SUB-Store is a Docker-first, secure V2Ray subscription aggregator and manageme
    ```bash
    docker compose -f compose.dev.yml up -d
    ```
-4. Start Nuxt dev server inside the app container:
+4. Install dependencies and start Nuxt dev server inside the app container:
    ```bash
    docker exec -it ss-app ash
+   bun install
    bun dev
    ```
 5. Create an admin user (in another terminal):
@@ -49,6 +50,7 @@ Start the dev server manually:
 
 ```bash
 docker exec -it ss-app ash
+bun install
 bun dev
 ```
 

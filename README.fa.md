@@ -20,9 +20,10 @@ X-SUB-Store یک سامانه امن و Docker-first برای تجمیع و مد
    ```bash
    docker compose -f compose.dev.yml up -d
    ```
-4. سرور dev را داخل کانتینر `app` اجرا کنید:
+4. وابستگی‌ها را نصب کنید و سرور dev را داخل کانتینر `app` اجرا کنید:
    ```bash
    docker exec -it ss-app ash
+   bun install
    bun dev
    ```
 5. یک کاربر ادمین بسازید (در یک ترمینال جدا):
@@ -47,6 +48,7 @@ docker compose -f compose.dev.yml up -d
 سرور dev را به‌صورت دستی اجرا کنید:
 ```bash
 docker exec -it ss-app ash
+bun install
 bun dev
 ```
 

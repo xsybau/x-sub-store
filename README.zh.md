@@ -20,9 +20,10 @@ X-SUB-Store 是一个以 Docker 为核心、面向安全的 V2Ray 订阅聚合�
    ```bash
    docker compose -f compose.dev.yml up -d
    ```
-4. 在 `app` 容器中手动启动 Nuxt 开发服务：
+4. 在 `app` 容器中手动安装依赖并启动 Nuxt 开发服务：
    ```bash
    docker exec -it ss-app ash
+   bun install
    bun dev
    ```
 5. 创建管理员账号（在另一个终端）：
@@ -47,6 +48,7 @@ Nuxt 源码已挂载以支持热更新。依赖缓存、Nuxt/Nitro 缓存与 Mon
 手动启动开发服务：
 ```bash
 docker exec -it ss-app ash
+bun install
 bun dev
 ```
 
