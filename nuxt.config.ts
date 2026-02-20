@@ -7,9 +7,7 @@ export default defineNuxtConfig({
   app: {
     head: {
       titleTemplate: (titleChunk?: string) =>
-        titleChunk
-          ? `${titleChunk} · V2Ray Subscription Hub`
-          : "V2Ray Subscription Hub",
+        titleChunk ? `${titleChunk} · X-SUB-Store` : "X-SUB-Store",
       link: [
         { rel: "icon", type: "image/svg+xml", href: "/favicon-terminal.svg" },
         { rel: "alternate icon", type: "image/x-icon", href: "/favicon.ico" },

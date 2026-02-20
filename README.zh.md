@@ -1,6 +1,6 @@
-# V2Ray 订阅中心
+# X-SUB-Store
 
-一个以 Docker 为核心、面向安全的 V2Ray 订阅聚合与管理系统。
+X-SUB-Store 是一个以 Docker 为核心、面向安全的 V2Ray 订阅聚合与管理系统。
 
 ## 功能特性
 - **集中式中心**：将多个订阅源（Hiddify、Xray 等）合并为一个输出。

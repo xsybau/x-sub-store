@@ -1,5 +1,5 @@
 {
-  "name": "app",
+  "name": "x-sub-store",
   "type": "module",
   "private": true,
   "scripts": {

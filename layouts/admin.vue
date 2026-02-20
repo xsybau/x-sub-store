@@ -32,7 +32,7 @@
                   Control
                 </p>
                 <h1 class="text-xl font-semibold text-highlighted">
-                  V2Ray Hub
+                  X-SUB-Store
                 </h1>
               </div>
             </div>

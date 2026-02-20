@@ -1,6 +1,6 @@
-# V2Ray Subscription Hub
+# X-SUB-Store
 
-A Docker-first, secure V2Ray subscription aggregator and management system.
+X-SUB-Store is a Docker-first, secure V2Ray subscription aggregator and management system.
 
 ## Features
 
