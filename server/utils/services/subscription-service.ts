@@ -19,29 +19,79 @@ import {
 } from "~/server/utils/services/types";
 
 const getPriorityForScope = (scope: SourceScope): number => {
-  return scope === "USER" ? 2 : 1;
+  if (scope === "USER") {
+    return 3;
+  }
+
+  if (scope === "TAG") {
+    return 2;
+  }
+
+  return 1;
 };
 
 const getStaticPriorityForScope = (scope: SourceScope): number => {
   if (scope === "USER") {
     return 3;
   }
+
+  if (scope === "TAG") {
+    return 2;
+  }
+
   return 1;
 };
 
-const listUserSources = async (userId: string) => {
-  const [userUpstreams, globalUpstreams, userStatic, globalStatic] =
-    await Promise.all([
-      Upstream.find({ userId, enabled: true }),
-      Upstream.find({ scope: "GLOBAL", enabled: true }),
-      StaticNode.find({ userId, enabled: true }),
-      StaticNode.find({ scope: "GLOBAL", enabled: true }),
-    ]);
+const getStaticSourcePrefix = (scope: SourceScope): string => {
+  if (scope === "USER") {
+    return "Static User";
+  }
+
+  if (scope === "TAG") {
+    return "Static Tag";
+  }
+
+  return "Static Global";
+};
+
+const getUpstreamSourcePrefix = (scope: SourceScope): string => {
+  if (scope === "USER") {
+    return "User Upstream";
+  }
+
+  if (scope === "TAG") {
+    return "Tag Upstream";
+  }
+
+  return "Global Upstream";
+};
+
+const listUserSources = async (user: { _id: unknown; tagIds?: unknown[] }) => {
+  const userId = String(user._id);
+  const tagIds = (user.tagIds || []).map((tagId) => String(tagId));
+
+  const [
+    userUpstreams,
+    tagUpstreams,
+    globalUpstreams,
+    userStatic,
+    tagStatic,
+    globalStatic,
+  ] = await Promise.all([
+    Upstream.find({ userId, enabled: true }),
+    Upstream.find({ scope: "TAG", tagId: { $in: tagIds }, enabled: true }),
+    Upstream.find({ scope: "GLOBAL", enabled: true }),
+    StaticNode.find({ userId, enabled: true }),
+    StaticNode.find({ scope: "TAG", tagId: { $in: tagIds }, enabled: true }),
+    StaticNode.find({ scope: "GLOBAL", enabled: true }),
+  ]);
 
   return {
     userUpstreams,
+    tagUpstreams,
     globalUpstreams,
     userStatic,
+    tagStatic,
     globalStatic,
   };
 };
@@ -58,8 +108,7 @@ const parseStaticNodes = (
   for (const node of staticNodes) {
     const uris = extractNodes(node.content);
     const priority = getStaticPriorityForScope(node.scope);
-    const sourcePrefix =
-      node.scope === "USER" ? "Static User" : "Static Global";
+    const sourcePrefix = getStaticSourcePrefix(node.scope);
     const source = node.name ? `${sourcePrefix}: ${node.name}` : sourcePrefix;
 
     for (const uri of uris) {
@@ -89,6 +138,7 @@ const fetchUpstreamContents = async (
 
   for (const upstream of upstreams) {
     const priority = getPriorityForScope(upstream.scope);
+    const source = `${getUpstreamSourcePrefix(upstream.scope)}: ${upstream.name}`;
 
     try {
       const content = await safeFetch(upstream.url);
@@ -104,7 +154,7 @@ const fetchUpstreamContents = async (
       results.push({
         content,
         priority,
-        source: upstream.name,
+        source,
         status: "OK",
       });
     } catch (error) {
@@ -121,7 +171,7 @@ const fetchUpstreamContents = async (
       results.push({
         content: "",
         priority,
-        source: upstream.name,
+        source,
         status: "ERROR",
         error: errorMessage,
       });
@@ -181,11 +231,17 @@ const previewForUser = async (id: string): Promise<PreviewResult> => {
     throw createError({ statusCode: 404, statusMessage: "User not found" });
   }
 
-  const { userUpstreams, globalUpstreams, userStatic, globalStatic } =
-    await listUserSources(String(user._id));
+  const {
+    userUpstreams,
+    tagUpstreams,
+    globalUpstreams,
+    userStatic,
+    tagStatic,
+    globalStatic,
+  } = await listUserSources(user);
 
   const upstreamResults = await fetchUpstreamContents(
-    [...userUpstreams, ...globalUpstreams].map((upstream) => ({
+    [...userUpstreams, ...tagUpstreams, ...globalUpstreams].map((upstream) => ({
       _id: upstream._id,
       scope: upstream.scope,
       name: upstream.name,
@@ -197,6 +253,11 @@ const previewForUser = async (id: string): Promise<PreviewResult> => {
   const { allNodes, uniqueUris } = buildDeduplicatedNodes(
     [
       ...userStatic.map((node) => ({
+        content: node.content,
+        name: node.name,
+        scope: node.scope,
+      })),
+      ...tagStatic.map((node) => ({
         content: node.content,
         name: node.name,
         scope: node.scope,
@@ -214,7 +275,7 @@ const previewForUser = async (id: string): Promise<PreviewResult> => {
     user,
     stats: {
       upstreams: upstreamResults.length,
-      staticNodes: userStatic.length + globalStatic.length,
+      staticNodes: userStatic.length + tagStatic.length + globalStatic.length,
       totalRawNodes: allNodes.length,
       uniqueNodes: uniqueUris.length,
     },
@@ -257,11 +318,17 @@ const resolveByToken = async (
     };
   }
 
-  const { userUpstreams, globalUpstreams, userStatic, globalStatic } =
-    await listUserSources(String(user._id));
+  const {
+    userUpstreams,
+    tagUpstreams,
+    globalUpstreams,
+    userStatic,
+    tagStatic,
+    globalStatic,
+  } = await listUserSources(user);
 
   const upstreamResults = await fetchUpstreamContents(
-    [...userUpstreams, ...globalUpstreams].map((upstream) => ({
+    [...userUpstreams, ...tagUpstreams, ...globalUpstreams].map((upstream) => ({
       _id: upstream._id,
       scope: upstream.scope,
       name: upstream.name,
@@ -273,6 +340,11 @@ const resolveByToken = async (
   const { uniqueUris } = buildDeduplicatedNodes(
     [
       ...userStatic.map((node) => ({
+        content: node.content,
+        name: node.name,
+        scope: node.scope,
+      })),
+      ...tagStatic.map((node) => ({
         content: node.content,
         name: node.name,
         scope: node.scope,

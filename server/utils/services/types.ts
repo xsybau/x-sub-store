@@ -1,6 +1,6 @@
 import { createError, type H3Event } from "h3";
 
-export type SourceScope = "GLOBAL" | "USER";
+export type SourceScope = "GLOBAL" | "USER" | "TAG";
 
 export interface NodeCandidate {
   uri: string;

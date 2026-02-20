@@ -7,10 +7,20 @@ import type {
   UserWithToken,
 } from "~/modules/AdminUsers/types/users";
 
+interface ListUsersApiOptions {
+  headers?: HeadersInit;
+  tagId?: string;
+}
+
 export const listUsersApi = async (
-  headers?: HeadersInit,
+  options: ListUsersApiOptions = {},
 ): Promise<UserItem[]> => {
-  return $fetch("/api/admin/users", { headers });
+  return $fetch("/api/admin/users", {
+    headers: options.headers,
+    query: {
+      tagId: options.tagId,
+    },
+  });
 };
 
 export const createUserApi = async (

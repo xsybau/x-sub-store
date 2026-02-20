@@ -15,7 +15,13 @@
         <div class="min-w-0">
           <p class="truncate font-semibold">{{ row.original.name }}</p>
           <p class="truncate text-xs text-muted">
-            {{ row.original.scope === "USER" ? "User scope" : "Global scope" }}
+            {{
+              row.original.scope === "USER"
+                ? "User scope"
+                : row.original.scope === "TAG"
+                  ? "Tag scope"
+                  : "Global scope"
+            }}
           </p>
         </div>
       </template>
@@ -77,7 +83,8 @@
             variant="ghost"
             icon="i-heroicons-bolt"
             title="Test Fetch"
-            @click="testFetch(row.original.url)"
+            :loading="testingUpstreamId === row.original._id"
+            @click="testFetch(row.original._id, row.original.url)"
           />
           <UButton
             size="xs"
@@ -187,6 +194,7 @@ import type { SourceScope } from "~/modules/AdminSources/types/sources";
 const props = defineProps<{
   scope: SourceScope;
   userId?: string;
+  tagId?: string;
 }>();
 
 const columns = [
@@ -215,11 +223,13 @@ const {
   openDeleteDialog,
   deleteItem,
   testFetch,
+  testingUpstreamId,
   copyUrl,
   copyError,
   formatDate,
 } = useUpstreamManager({
   scope: props.scope,
   userId: props.userId,
+  tagId: props.tagId,
 });
 </script>

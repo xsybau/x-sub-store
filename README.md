@@ -6,6 +6,7 @@ A Docker-first, secure V2Ray subscription aggregator and management system.
 
 - **Centralized Hub**: Merge multiple subscriptions (Hiddify, Xray, etc.) into one.
 - **Admin Panel**: Manage users, upstream sources, and static nodes.
+- **Tag-Aware Delivery**: Assign multiple tags per user, apply default tags for new users, and attach sources to tags.
 - **Secure**: Per-user secret tokens, no public signup, encrypted token storage.
 - **Performance**: Caching, concurrent fetching, deduplication.
 - **Docker First**: Easy deployment with Nginx and SSL automation.
@@ -84,6 +85,7 @@ Notes:
 
 - Login to Admin Panel.
 - Create users. Each user gets a unique Subscription URL.
+- Assign tags per user (multi-tag supported). Default tags are automatically applied to new users.
 - Give this URL to the user for their V2Ray client (v2rayNG, V2Box, etc.).
 - Subscription output defaults to raw URL lines (`vless://`, `vmess://`, ...), which is compatible with clients like v2rayN and Nekoray.
 - Optional: append `?format=base64` to return classic base64-encoded subscription content.
@@ -92,7 +94,18 @@ Notes:
 
 - **Global**: Applies to ALL users.
 - **User**: Applies to specific user only.
+- **Tag**: Applies to users that contain a specific tag.
 - Supports raw text lists or base64 subscription links.
+
+### Managing Tags
+- Create, edit, and delete tags from the Tags page.
+- Mark multiple tags as defaults for all newly created users.
+- Manage tag-scoped upstreams and static nodes from each tag details page.
+- Apply a tag to selected users (batch) or all existing users.
+- Run bulk actions for users in a tag:
+  - Deactivate accounts
+  - Rotate tokens
+  - Delete users
 
 ### Token Rotation
 

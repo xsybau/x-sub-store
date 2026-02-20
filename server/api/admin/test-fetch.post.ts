@@ -4,5 +4,5 @@ import { testFetchBodySchema } from "~/server/utils/validation/schemas/upstreams
 
 export default defineEventHandler(async (event) => {
   const body = await parseBody(event, testFetchBodySchema);
-  return upstreamService.testFetch(body.url);
+  return upstreamService.testFetch(body);
 });

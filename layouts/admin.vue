@@ -135,6 +135,12 @@ const links = [
     description: "Create users, rotate tokens and inspect subscriptions",
   },
   {
+    label: "Tags",
+    to: "/admin/tags",
+    icon: "i-heroicons-tag",
+    description: "Manage user tags, defaults and tag-level source targeting",
+  },
+  {
     label: "Global Settings",
     to: "/admin/settings",
     icon: "i-heroicons-cog-6-tooth",

@@ -1,4 +1,4 @@
-export type SourceScope = "GLOBAL" | "USER";
+export type SourceScope = "GLOBAL" | "USER" | "TAG";
 
 export interface UpstreamItem {
   _id: string;
@@ -6,6 +6,7 @@ export interface UpstreamItem {
   url: string;
   scope: SourceScope;
   userId?: string;
+  tagId?: string;
   enabled?: boolean;
   type?: string;
   lastFetchStatus?: number;
@@ -19,6 +20,7 @@ export interface StaticNodeItem {
   content: string;
   scope: SourceScope;
   userId?: string;
+  tagId?: string;
   enabled?: boolean;
 }
 
@@ -27,6 +29,7 @@ export interface CreateUpstreamInput {
   url: string;
   scope: SourceScope;
   userId?: string;
+  tagId?: string;
 }
 
 export interface UpdateUpstreamInput {
@@ -41,6 +44,7 @@ export interface CreateStaticNodeInput {
   content: string;
   scope: SourceScope;
   userId?: string;
+  tagId?: string;
 }
 
 export interface UpdateStaticNodeInput {

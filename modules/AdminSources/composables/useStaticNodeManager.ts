@@ -13,6 +13,7 @@ import {
 interface UseStaticNodeManagerOptions {
   scope: SourceScope;
   userId?: string;
+  tagId?: string;
 }
 
 interface StaticNodeFormState {
@@ -49,6 +50,7 @@ export const useStaticNodeManager = (options: UseStaticNodeManagerOptions) => {
   const query = computed(() => ({
     scope: options.scope,
     userId: options.userId,
+    tagId: options.tagId,
   }));
 
   const {
@@ -57,7 +59,7 @@ export const useStaticNodeManager = (options: UseStaticNodeManagerOptions) => {
     refresh,
   } = useAsyncData<StaticNodeItem[]>(
     () =>
-      `admin-static-nodes-${query.value.scope}-${query.value.userId || "none"}`,
+      `admin-static-nodes-${query.value.scope}-${query.value.userId || "none"}-${query.value.tagId || "none"}`,
     () => listStaticNodesApi(query.value),
     {
       watch: [query],
@@ -88,6 +90,7 @@ export const useStaticNodeManager = (options: UseStaticNodeManagerOptions) => {
         content: newItem.value.content,
         scope: options.scope,
         userId: options.userId,
+        tagId: options.tagId,
       });
       createDialogOpen.value = false;
       newItem.value = getInitialStaticNodeForm();

@@ -6,12 +6,13 @@ export const StaticNodeSchema = new Schema(
     content: { type: String, required: true }, // vmess://... or other
     scope: {
       type: String,
-      enum: ["GLOBAL", "USER"],
+      enum: ["GLOBAL", "USER", "TAG"],
       default: "USER",
       required: true,
       index: true,
     },
     userId: { type: Schema.Types.ObjectId, ref: "User", index: true },
+    tagId: { type: Schema.Types.ObjectId, ref: "Tag", index: true },
     enabled: { type: Boolean, default: true },
   },
   { timestamps: true },

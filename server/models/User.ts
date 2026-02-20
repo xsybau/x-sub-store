@@ -4,6 +4,10 @@ export const UserSchema = new Schema(
   {
     email: { type: String, index: true }, // Optional for users, just a label
     label: { type: String, required: true },
+    tagIds: {
+      type: [{ type: Schema.Types.ObjectId, ref: "Tag" }],
+      default: [],
+    },
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true },

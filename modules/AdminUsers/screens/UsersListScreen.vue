@@ -12,6 +12,23 @@
         </UBadge>
       </template>
 
+      <template #tagIds-cell="{ row }">
+        <div class="flex flex-wrap gap-1">
+          <UBadge
+            v-for="tagId in row.original.tagIds"
+            :key="`${row.original._id}-${tagId}`"
+            color="neutral"
+            variant="subtle"
+            size="xs"
+          >
+            {{ getTagName(tagId) }}
+          </UBadge>
+          <span v-if="!row.original.tagIds?.length" class="text-xs text-muted">
+            -
+          </span>
+        </div>
+      </template>
+
       <template #actions-cell="{ row }">
         <div class="flex space-x-2">
           <UButton
@@ -56,12 +73,26 @@
       <template #content>
         <div class="p-6">
           <h3 class="mb-4 text-lg font-bold">Create User</h3>
-          <form class="space-y-4" @submit.prevent="createUser">
-            <UFormField label="Label">
-              <UInput v-model="newUser.label" required />
+          <form class="w-full space-y-4" @submit.prevent="createUser">
+            <UFormField label="Label" class="w-full">
+              <UInput v-model="newUser.label" class="w-full" required />
             </UFormField>
-            <UFormField label="Email">
-              <UInput v-model="newUser.email" type="email" />
+            <UFormField label="Email" class="w-full">
+              <UInput v-model="newUser.email" class="w-full" type="email" />
+            </UFormField>
+            <UFormField label="Tags" class="w-full">
+              <UInputMenu
+                v-model="newUser.tagIds"
+                :items="tags"
+                label-key="name"
+                value-key="_id"
+                :multiple="true"
+                placeholder="Select tags"
+                class="w-full"
+              />
+              <p class="mt-1 text-xs text-muted">
+                Default tags are added automatically for new users.
+              </p>
             </UFormField>
             <div class="flex justify-end space-x-2">
               <UButton variant="ghost" @click="isCreateDialogOpen = false"
@@ -154,11 +185,13 @@
 <script setup lang="ts">
 import type { FetchError } from "ofetch";
 import ConfirmDialog from "~/components/ConfirmDialog.vue";
+import type { TagItem } from "~/modules/AdminUsers/types/tags";
 import type {
   CreateUserInput,
   UserItem,
   UserSubscriptionPreview,
 } from "~/modules/AdminUsers/types/users";
+import { listTagsApi } from "~/modules/AdminUsers/utils/tagsApi";
 import {
   createUserApi,
   deleteUserApi,
@@ -170,6 +203,7 @@ import {
 const columns = [
   { accessorKey: "label", header: "Name" },
   { accessorKey: "email", header: "Email" },
+  { accessorKey: "tagIds", header: "Tags" },
   { accessorKey: "isActive", header: "Status" },
   { accessorKey: "actions", header: "Actions" },
 ];
@@ -180,20 +214,31 @@ const requestHeaders = import.meta.server
 
 const { data, status, refresh } = useAsyncData<UserItem[]>(
   "admin-users-list",
-  () => listUsersApi(requestHeaders),
+  () => listUsersApi({ headers: requestHeaders }),
   {
     default: (): UserItem[] => [],
   },
 );
 
+const { data: tagsData, status: tagsStatus } = useAsyncData<TagItem[]>(
+  "admin-users-tags",
+  () => listTagsApi(requestHeaders),
+  {
+    default: (): TagItem[] => [],
+  },
+);
+
+const tags = computed<TagItem[]>(() => tagsData.value);
 const users = computed<UserItem[]>(() => data.value);
-const pending = computed(() => status.value === "pending");
+const pending = computed(
+  () => status.value === "pending" || tagsStatus.value === "pending",
+);
 
 const toast = useToast();
 
 const isCreateDialogOpen = ref(false);
 const creating = ref(false);
-const newUser = ref<CreateUserInput>({ label: "", email: "" });
+const newUser = ref<CreateUserInput>({ label: "", email: "", tagIds: [] });
 
 const previewModalOpen = ref(false);
 const previewData = ref<UserSubscriptionPreview | null>(null);
@@ -206,6 +251,14 @@ const togglingUserId = ref<string | null>(null);
 const deleteDialogOpen = ref(false);
 const deletingUserId = ref<string | null>(null);
 const deletingUser = ref(false);
+
+const tagNameMap = computed<Map<string, string>>(() => {
+  return new Map(tags.value.map((tag) => [tag._id, tag.name]));
+});
+
+const getTagName = (tagId: string): string => {
+  return tagNameMap.value.get(tagId) || "Unknown tag";
+};
 
 const getErrorMessage = (error: unknown): string => {
   if (typeof error !== "object" || !error) {
@@ -226,7 +279,7 @@ const createUser = async () => {
   try {
     await createUserApi(newUser.value);
     isCreateDialogOpen.value = false;
-    newUser.value = { label: "", email: "" };
+    newUser.value = { label: "", email: "", tagIds: [] };
     await refresh();
     toast.add({
       title: "User created",

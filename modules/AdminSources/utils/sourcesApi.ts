@@ -12,12 +12,14 @@ import type {
 interface SourceListFilter {
   scope: SourceScope;
   userId?: string;
+  tagId?: string;
 }
 
 const sourceQuery = (filter: SourceListFilter) => {
   return {
     scope: filter.scope,
     userId: filter.userId,
+    tagId: filter.tagId,
   };
 };
 
@@ -56,12 +58,13 @@ export const deleteUpstreamApi = async (
   });
 };
 
-export const testUpstreamFetchApi = async (
-  url: string,
-): Promise<TestFetchResult> => {
+export const testUpstreamFetchApi = async (input: {
+  url: string;
+  upstreamId?: string;
+}): Promise<TestFetchResult> => {
   return $fetch("/api/admin/test-fetch", {
     method: "POST",
-    body: { url },
+    body: input,
   });
 };
 

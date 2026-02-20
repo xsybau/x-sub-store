@@ -1,7 +1,7 @@
-import { CacheEntry } from "~/server/models/CacheEntry";
 import { Upstream } from "~/server/models/Upstream";
 import { logAudit } from "~/server/utils/audit";
 import { safeFetch } from "~/server/utils/fetcher";
+import { cacheService } from "~/server/utils/services/cache-service";
 import {
   getErrorMessage,
   type TestFetchResult,
@@ -12,22 +12,18 @@ import type {
   UpdateUpstreamBody,
 } from "~/server/utils/validation/schemas/upstreams";
 
-const invalidateCacheByScope = async (userId?: string | null) => {
-  if (userId) {
-    await CacheEntry.deleteMany({ userId });
-    return;
-  }
-  await CacheEntry.deleteMany({});
-};
-
 const list = async (query: ListUpstreamsQuery) => {
   const filter: {
     userId?: string;
-    scope?: "GLOBAL" | "USER";
+    tagId?: string;
+    scope?: "GLOBAL" | "USER" | "TAG";
   } = {};
 
   if (query.userId) {
     filter.userId = query.userId;
+  }
+  if (query.tagId) {
+    filter.tagId = query.tagId;
   }
   if (query.scope) {
     filter.scope = query.scope;
@@ -39,6 +35,12 @@ const list = async (query: ListUpstreamsQuery) => {
 const create = async (actorAdminId: string, input: CreateUpstreamBody) => {
   const upstream = await Upstream.create(input);
 
+  await cacheService.invalidateBySourceTarget({
+    scope: upstream.scope,
+    userId: upstream.userId ? String(upstream.userId) : null,
+    tagId: upstream.tagId ? String(upstream.tagId) : null,
+  });
+
   await logAudit({
     actorAdminId,
     action: "CREATE_UPSTREAM",
@@ -48,6 +50,8 @@ const create = async (actorAdminId: string, input: CreateUpstreamBody) => {
       name: input.name,
       scope: input.scope,
       url: input.url,
+      userId: input.userId,
+      tagId: input.tagId,
     },
   });
 
@@ -59,14 +63,18 @@ const update = async (
   id: string,
   input: UpdateUpstreamBody,
 ) => {
-  const upstream = await Upstream.findByIdAndUpdate(id, input, { new: true });
+  const upstream = await Upstream.findByIdAndUpdate(id, input, {
+    returnDocument: "after",
+  });
   if (!upstream) {
     throw createError({ statusCode: 404, statusMessage: "Upstream not found" });
   }
 
-  await invalidateCacheByScope(
-    upstream.userId ? String(upstream.userId) : null,
-  );
+  await cacheService.invalidateBySourceTarget({
+    scope: upstream.scope,
+    userId: upstream.userId ? String(upstream.userId) : null,
+    tagId: upstream.tagId ? String(upstream.tagId) : null,
+  });
 
   await logAudit({
     actorAdminId,
@@ -85,9 +93,11 @@ const remove = async (actorAdminId: string, id: string) => {
     throw createError({ statusCode: 404, statusMessage: "Upstream not found" });
   }
 
-  await invalidateCacheByScope(
-    upstream.userId ? String(upstream.userId) : null,
-  );
+  await cacheService.invalidateBySourceTarget({
+    scope: upstream.scope,
+    userId: upstream.userId ? String(upstream.userId) : null,
+    tagId: upstream.tagId ? String(upstream.tagId) : null,
+  });
 
   await logAudit({
     actorAdminId,
@@ -99,12 +109,23 @@ const remove = async (actorAdminId: string, id: string) => {
   return { success: true };
 };
 
-const testFetch = async (url: string): Promise<TestFetchResult> => {
+const testFetch = async (input: {
+  url: string;
+  upstreamId?: string;
+}): Promise<TestFetchResult> => {
   const start = Date.now();
 
   try {
-    const content = await safeFetch(url);
+    const content = await safeFetch(input.url);
     const duration = Date.now() - start;
+
+    if (input.upstreamId) {
+      await Upstream.findByIdAndUpdate(input.upstreamId, {
+        lastFetchStatus: 200,
+        lastFetchAt: new Date(),
+        lastError: null,
+      });
+    }
 
     return {
       success: true,
@@ -114,6 +135,14 @@ const testFetch = async (url: string): Promise<TestFetchResult> => {
       preview: content.substring(0, 200) + (content.length > 200 ? "..." : ""),
     };
   } catch (error) {
+    if (input.upstreamId) {
+      await Upstream.findByIdAndUpdate(input.upstreamId, {
+        lastFetchStatus: 0,
+        lastFetchAt: new Date(),
+        lastError: getErrorMessage(error),
+      });
+    }
+
     return {
       success: false,
       duration: Date.now() - start,

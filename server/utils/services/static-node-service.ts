@@ -1,28 +1,24 @@
-import { CacheEntry } from "~/server/models/CacheEntry";
 import { StaticNode } from "~/server/models/StaticNode";
 import { logAudit } from "~/server/utils/audit";
+import { cacheService } from "~/server/utils/services/cache-service";
 import type {
   CreateStaticNodeBody,
   ListStaticNodesQuery,
   UpdateStaticNodeBody,
 } from "~/server/utils/validation/schemas/static-nodes";
 
-const invalidateCacheByScope = async (userId?: string | null) => {
-  if (userId) {
-    await CacheEntry.deleteMany({ userId });
-    return;
-  }
-  await CacheEntry.deleteMany({});
-};
-
 const list = async (query: ListStaticNodesQuery) => {
   const filter: {
     userId?: string;
-    scope?: "GLOBAL" | "USER";
+    tagId?: string;
+    scope?: "GLOBAL" | "USER" | "TAG";
   } = {};
 
   if (query.userId) {
     filter.userId = query.userId;
+  }
+  if (query.tagId) {
+    filter.tagId = query.tagId;
   }
   if (query.scope) {
     filter.scope = query.scope;
@@ -34,6 +30,12 @@ const list = async (query: ListStaticNodesQuery) => {
 const create = async (actorAdminId: string, input: CreateStaticNodeBody) => {
   const node = await StaticNode.create(input);
 
+  await cacheService.invalidateBySourceTarget({
+    scope: node.scope,
+    userId: node.userId ? String(node.userId) : null,
+    tagId: node.tagId ? String(node.tagId) : null,
+  });
+
   await logAudit({
     actorAdminId,
     action: "CREATE_STATIC_NODE",
@@ -42,6 +44,8 @@ const create = async (actorAdminId: string, input: CreateStaticNodeBody) => {
     metadata: {
       name: input.name,
       scope: input.scope,
+      userId: input.userId,
+      tagId: input.tagId,
     },
   });
 
@@ -53,7 +57,9 @@ const update = async (
   id: string,
   input: UpdateStaticNodeBody,
 ) => {
-  const node = await StaticNode.findByIdAndUpdate(id, input, { new: true });
+  const node = await StaticNode.findByIdAndUpdate(id, input, {
+    returnDocument: "after",
+  });
   if (!node) {
     throw createError({
       statusCode: 404,
@@ -61,7 +67,11 @@ const update = async (
     });
   }
 
-  await invalidateCacheByScope(node.userId ? String(node.userId) : null);
+  await cacheService.invalidateBySourceTarget({
+    scope: node.scope,
+    userId: node.userId ? String(node.userId) : null,
+    tagId: node.tagId ? String(node.tagId) : null,
+  });
 
   await logAudit({
     actorAdminId,
@@ -83,7 +93,11 @@ const remove = async (actorAdminId: string, id: string) => {
     });
   }
 
-  await invalidateCacheByScope(node.userId ? String(node.userId) : null);
+  await cacheService.invalidateBySourceTarget({
+    scope: node.scope,
+    userId: node.userId ? String(node.userId) : null,
+    tagId: node.tagId ? String(node.tagId) : null,
+  });
 
   await logAudit({
     actorAdminId,

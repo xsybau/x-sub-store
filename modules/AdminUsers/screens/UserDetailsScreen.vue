@@ -33,6 +33,54 @@
 
     <UCard class="mb-8">
       <template #header>
+        <h3 class="text-lg font-bold">User Tags</h3>
+      </template>
+
+      <div class="space-y-3">
+        <div class="flex flex-wrap gap-2">
+          <UBadge
+            v-for="tagId in editableTagIds"
+            :key="`selected-tag-${tagId}`"
+            color="neutral"
+            variant="subtle"
+          >
+            {{ getTagName(tagId) }}
+          </UBadge>
+          <span v-if="!editableTagIds.length" class="text-sm text-muted"
+            >-</span
+          >
+        </div>
+
+        <UFormField label="Assigned Tags">
+          <UInputMenu
+            v-model="editableTagIds"
+            :items="tags"
+            label-key="name"
+            value-key="_id"
+            :multiple="true"
+            placeholder="Select user tags"
+            class="w-full"
+          />
+        </UFormField>
+
+        <div class="flex justify-end">
+          <p class="text-xs text-muted">
+            {{
+              savingTags
+                ? "Saving..."
+                : tagSaveError
+                  ? "Autosave failed. Edit tags again to retry."
+                  : isTagSelectionDirty
+                    ? "Pending save..."
+                    : "Changes save automatically."
+            }}
+          </p>
+        </div>
+      </div>
+    </UCard>
+
+    <UCard class="mb-8">
+      <template #header>
         <h3 class="text-lg font-bold">Subscription URL</h3>
       </template>
 
@@ -201,10 +249,12 @@ import type { FetchError } from "ofetch";
 import ConfirmDialog from "~/components/ConfirmDialog.vue";
 import StaticNodeManager from "~/modules/AdminSources/components/StaticNodeManager.vue";
 import UpstreamManager from "~/modules/AdminSources/components/UpstreamManager.vue";
+import type { TagItem } from "~/modules/AdminUsers/types/tags";
 import type {
   UserSubscriptionPreview,
   UserWithToken,
 } from "~/modules/AdminUsers/types/users";
+import { listTagsApi } from "~/modules/AdminUsers/utils/tagsApi";
 import {
   deleteUserApi,
   getUserApi,
@@ -232,7 +282,12 @@ const isPrivateIpv4Host = (hostname: string): boolean => {
     return false;
   }
 
-  const [first, second] = values;
+  const first = values[0];
+  const second = values[1];
+  if (first === undefined || second === undefined) {
+    return false;
+  }
+
   return (
     first === 10 ||
     first === 127 ||
@@ -284,6 +339,15 @@ const { data: user, refresh } = useAsyncData<UserWithToken | null>(
   },
 );
 
+const { data: tagsData } = useAsyncData<TagItem[]>(
+  "admin-user-tags",
+  () => listTagsApi(),
+  {
+    server: false,
+    default: (): TagItem[] => [],
+  },
+);
+
 const userPageTitle = computed(() => {
   const label = user.value?.label.trim();
   return label ? `${label} - Users` : "Users";
@@ -301,6 +365,39 @@ const deleteDialogOpen = ref(false);
 const rotatingToken = ref(false);
 const togglingStatus = ref(false);
 const deletingUser = ref(false);
+const savingTags = ref(false);
+const editableTagIds = ref<string[]>([]);
+const tagSaveError = ref<string | null>(null);
+const syncingTagSelection = ref(false);
+const queuedTagSave = ref(false);
+let tagSaveTimer: ReturnType<typeof setTimeout> | null = null;
+
+const tags = computed<TagItem[]>(() => tagsData.value);
+const tagNameMap = computed<Map<string, string>>(() => {
+  return new Map(tags.value.map((tag) => [tag._id, tag.name]));
+});
+
+const getTagName = (tagId: string) => {
+  return tagNameMap.value.get(tagId) || "Unknown tag";
+};
+
+watch(
+  () => user.value?.tagIds,
+  (tagIds) => {
+    syncingTagSelection.value = true;
+    editableTagIds.value = [...(tagIds || [])];
+    queueMicrotask(() => {
+      syncingTagSelection.value = false;
+    });
+  },
+  { immediate: true },
+);
+
+const isTagSelectionDirty = computed(() => {
+  const current = [...(user.value?.tagIds || [])].sort();
+  const editable = [...editableTagIds.value].sort();
+  return JSON.stringify(current) !== JSON.stringify(editable);
+});
 
 const previewStatusColumns = [
   { accessorKey: "source", header: "Upstream" },
@@ -362,6 +459,70 @@ const copyNodes = async () => {
 
   await navigator.clipboard.writeText(previewData.value.nodes.join("\n"));
   toast.add({ title: "Copied Nodes", color: "success" });
+};
+
+const triggerAutoSave = () => {
+  if (tagSaveTimer) {
+    clearTimeout(tagSaveTimer);
+  }
+
+  tagSaveTimer = setTimeout(() => {
+    void saveUserTags();
+  }, 450);
+};
+
+watch(
+  editableTagIds,
+  () => {
+    if (syncingTagSelection.value || !isTagSelectionDirty.value) {
+      return;
+    }
+    triggerAutoSave();
+  },
+  { deep: true },
+);
+
+onBeforeUnmount(() => {
+  if (tagSaveTimer) {
+    clearTimeout(tagSaveTimer);
+  }
+});
+
+const saveUserTags = async () => {
+  if (!user.value || !userId.value) {
+    return;
+  }
+
+  if (!isTagSelectionDirty.value) {
+    return;
+  }
+
+  if (savingTags.value) {
+    queuedTagSave.value = true;
+    return;
+  }
+
+  savingTags.value = true;
+  tagSaveError.value = null;
+  try {
+    await updateUserApi(userId.value, {
+      tagIds: editableTagIds.value,
+    });
+    await refresh();
+  } catch (error) {
+    tagSaveError.value = getErrorMessage(error);
+    toast.add({
+      title: "Tag update failed",
+      description: tagSaveError.value,
+      color: "error",
+    });
+  } finally {
+    savingTags.value = false;
+    if (queuedTagSave.value) {
+      queuedTagSave.value = false;
+      triggerAutoSave();
+    }
+  }
 };
 
 const rotateToken = async () => {

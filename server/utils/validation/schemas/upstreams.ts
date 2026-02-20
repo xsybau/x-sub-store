@@ -1,6 +1,10 @@
 import { z } from "zod";
 
-const scopeSchema = z.enum(["GLOBAL", "USER"]);
+const scopeSchema = z.enum(["GLOBAL", "USER", "TAG"]);
+const objectIdSchema = z
+  .string()
+  .trim()
+  .regex(/^[a-fA-F0-9]{24}$/);
 
 export const upstreamIdParamsSchema = z
   .object({
@@ -11,9 +15,47 @@ export const upstreamIdParamsSchema = z
 export const listUpstreamsQuerySchema = z
   .object({
     scope: scopeSchema.optional(),
-    userId: z.string().trim().min(1).optional(),
+    userId: objectIdSchema.optional(),
+    tagId: objectIdSchema.optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((data, ctx) => {
+    if (data.scope === "USER" && !data.userId) {
+      ctx.addIssue({
+        code: "custom",
+        message: "userId is required for USER scope",
+        path: ["userId"],
+      });
+    }
+    if (data.scope === "TAG" && !data.tagId) {
+      ctx.addIssue({
+        code: "custom",
+        message: "tagId is required for TAG scope",
+        path: ["tagId"],
+      });
+    }
+    if (data.scope === "GLOBAL" && (data.userId || data.tagId)) {
+      ctx.addIssue({
+        code: "custom",
+        message: "userId/tagId must not be set for GLOBAL scope",
+        path: ["scope"],
+      });
+    }
+    if (data.scope === "USER" && data.tagId) {
+      ctx.addIssue({
+        code: "custom",
+        message: "tagId must not be set for USER scope",
+        path: ["tagId"],
+      });
+    }
+    if (data.scope === "TAG" && data.userId) {
+      ctx.addIssue({
+        code: "custom",
+        message: "userId must not be set for TAG scope",
+        path: ["userId"],
+      });
+    }
+  });
 
 export const createUpstreamBodySchema = z
   .object({
@@ -23,7 +65,8 @@ export const createUpstreamBodySchema = z
       z.url().max(2048),
     ),
     scope: scopeSchema,
-    userId: z.string().trim().min(1).optional(),
+    userId: objectIdSchema.optional(),
+    tagId: objectIdSchema.optional(),
     enabled: z.boolean().optional(),
     type: z.string().trim().min(1).max(40).optional(),
   })
@@ -40,6 +83,34 @@ export const createUpstreamBodySchema = z
       ctx.addIssue({
         code: "custom",
         message: "userId must not be set for GLOBAL scope",
+        path: ["userId"],
+      });
+    }
+    if (data.scope === "TAG" && !data.tagId) {
+      ctx.addIssue({
+        code: "custom",
+        message: "tagId is required for TAG scope",
+        path: ["tagId"],
+      });
+    }
+    if (data.scope === "GLOBAL" && data.tagId) {
+      ctx.addIssue({
+        code: "custom",
+        message: "tagId must not be set for GLOBAL scope",
+        path: ["tagId"],
+      });
+    }
+    if (data.scope === "USER" && data.tagId) {
+      ctx.addIssue({
+        code: "custom",
+        message: "tagId must not be set for USER scope",
+        path: ["tagId"],
+      });
+    }
+    if (data.scope === "TAG" && data.userId) {
+      ctx.addIssue({
+        code: "custom",
+        message: "userId must not be set for TAG scope",
         path: ["userId"],
       });
     }
@@ -75,6 +146,7 @@ export const testFetchBodySchema = z
       (value) => (typeof value === "string" ? value.trim() : value),
       z.url().max(2048),
     ),
+    upstreamId: objectIdSchema.optional(),
   })
   .strict();
 

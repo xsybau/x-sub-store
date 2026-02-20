@@ -126,6 +126,7 @@ import type { SourceScope } from "~/modules/AdminSources/types/sources";
 const props = defineProps<{
   scope: SourceScope;
   userId?: string;
+  tagId?: string;
 }>();
 
 const columns = [
@@ -154,5 +155,6 @@ const {
 } = useStaticNodeManager({
   scope: props.scope,
   userId: props.userId,
+  tagId: props.tagId,
 });
 </script>

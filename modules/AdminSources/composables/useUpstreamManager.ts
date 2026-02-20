@@ -14,6 +14,7 @@ import {
 interface UseUpstreamManagerOptions {
   scope: SourceScope;
   userId?: string;
+  tagId?: string;
 }
 
 interface UpstreamFormState {
@@ -50,6 +51,7 @@ export const useUpstreamManager = (options: UseUpstreamManagerOptions) => {
   const query = computed(() => ({
     scope: options.scope,
     userId: options.userId,
+    tagId: options.tagId,
   }));
 
   const {
@@ -58,7 +60,7 @@ export const useUpstreamManager = (options: UseUpstreamManagerOptions) => {
     refresh,
   } = useAsyncData<UpstreamItem[]>(
     () =>
-      `admin-upstreams-${query.value.scope}-${query.value.userId || "none"}`,
+      `admin-upstreams-${query.value.scope}-${query.value.userId || "none"}-${query.value.tagId || "none"}`,
     () => listUpstreamsApi(query.value),
     {
       watch: [query],
@@ -80,6 +82,7 @@ export const useUpstreamManager = (options: UseUpstreamManagerOptions) => {
   const deleteDialogOpen = ref(false);
   const deleting = ref(false);
   const deletingId = ref<string | null>(null);
+  const testingUpstreamId = ref<string | null>(null);
 
   const createItem = async () => {
     creating.value = true;
@@ -89,6 +92,7 @@ export const useUpstreamManager = (options: UseUpstreamManagerOptions) => {
         url: newItem.value.url,
         scope: options.scope,
         userId: options.userId,
+        tagId: options.tagId,
       });
       createDialogOpen.value = false;
       newItem.value = getInitialUpstreamForm();
@@ -193,9 +197,10 @@ export const useUpstreamManager = (options: UseUpstreamManagerOptions) => {
     }
   };
 
-  const testFetch = async (url: string) => {
+  const testFetch = async (upstreamId: string, url: string) => {
+    testingUpstreamId.value = upstreamId;
     try {
-      const response = await testUpstreamFetchApi(url);
+      const response = await testUpstreamFetchApi({ url, upstreamId });
       if (response.success) {
         toast.add({
           title: "Success",
@@ -215,6 +220,9 @@ export const useUpstreamManager = (options: UseUpstreamManagerOptions) => {
         description: getErrorMessage(error),
         color: "error",
       });
+    } finally {
+      testingUpstreamId.value = null;
+      await refresh();
     }
   };
 
@@ -237,6 +245,7 @@ export const useUpstreamManager = (options: UseUpstreamManagerOptions) => {
     openDeleteDialog,
     deleteItem,
     testFetch,
+    testingUpstreamId,
     copyUrl,
     copyError,
     formatDate,
