@@ -11,11 +11,7 @@
         <p class="mt-2 text-sm text-muted">{{ description }}</p>
 
         <div class="mt-6 flex justify-end gap-2">
-          <UButton
-            variant="ghost"
-            :disabled="loading"
-            @click="open = false"
-          >
+          <UButton variant="ghost" :disabled="loading" @click="open = false">
             {{ cancelLabel }}
           </UButton>
           <UButton
@@ -32,23 +28,33 @@
 </template>
 
 <script setup lang="ts">
-withDefaults(defineProps<{
-  title: string;
-  description: string;
-  confirmLabel?: string;
-  cancelLabel?: string;
-  confirmColor?: 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral';
-  loading?: boolean;
-}>(), {
-  confirmLabel: 'Confirm',
-  cancelLabel: 'Cancel',
-  confirmColor: 'error',
-  loading: false
-});
+withDefaults(
+  defineProps<{
+    title: string;
+    description: string;
+    confirmLabel?: string;
+    cancelLabel?: string;
+    confirmColor?:
+      | "primary"
+      | "secondary"
+      | "success"
+      | "info"
+      | "warning"
+      | "error"
+      | "neutral";
+    loading?: boolean;
+  }>(),
+  {
+    confirmLabel: "Confirm",
+    cancelLabel: "Cancel",
+    confirmColor: "error",
+    loading: false,
+  },
+);
 
 defineEmits<{
   confirm: [];
 }>();
 
-const open = defineModel<boolean>('open', { default: false });
+const open = defineModel<boolean>("open", { default: false });
 </script>

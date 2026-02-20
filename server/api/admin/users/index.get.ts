@@ -1,5 +1,5 @@
-import { User } from '~/server/models/User';
+import { userService } from "~/server/utils/services/user-service";
 
-export default defineEventHandler(async (event) => {
-    return await User.find().sort({ createdAt: -1 });
+export default defineEventHandler(async () => {
+  return userService.list();
 });

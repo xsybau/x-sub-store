@@ -6,8 +6,11 @@
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
+    "lint": "bunx eslint . --cache --cache-location .eslintcache --cache-strategy content",
+    "lint:full": "bunx eslint .",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "test": "bun test"
   },
   "dependencies": {
     "@nuxt/ui": "^4.4.0",

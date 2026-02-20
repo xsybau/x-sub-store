@@ -1,18 +1,21 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-export default defineNitroPlugin(async (_nitroApp) => {
+export default defineNitroPlugin((_nitroApp) => {
   const config = useRuntimeConfig();
-  const mongoUri = config.mongoUri || process.env.MONGO_URI || process.env.MONGO_URL;
+  const mongoUri =
+    config.mongoUri || process.env.MONGO_URI || process.env.MONGO_URL;
 
   if (!mongoUri) {
-    console.warn('MONGO_URI is not set, skipping database connection');
+    console.warn("MONGO_URI is not set, skipping database connection");
     return;
   }
 
-  try {
-    await mongoose.connect(mongoUri);
-    console.log('Connected to MongoDB');
-  } catch (e) {
-    console.error('MongoDB connection error:', e);
-  }
+  void mongoose
+    .connect(mongoUri)
+    .then(() => {
+      console.log("Connected to MongoDB");
+    })
+    .catch((error: unknown) => {
+      console.error("MongoDB connection error:", error);
+    });
 });

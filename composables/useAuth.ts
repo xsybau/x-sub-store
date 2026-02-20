@@ -1,3 +1,5 @@
+import { useAdminAuth } from "~/modules/AdminAuth/composables/useAdminAuth";
+
 export const useAuth = () => {
   const user = useState<any>("user", () => null);
 

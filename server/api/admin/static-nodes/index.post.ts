@@ -1,21 +1,10 @@
-import { StaticNode } from '~/server/models/StaticNode';
-import { logAudit } from '~/server/utils/audit';
+import { requireActorAdminId } from "~/server/utils/services/types";
+import { staticNodeService } from "~/server/utils/services/static-node-service";
+import { parseBody } from "~/server/utils/validation/parse";
+import { createStaticNodeBodySchema } from "~/server/utils/validation/schemas/static-nodes";
 
 export default defineEventHandler(async (event) => {
-    const body = await readBody(event);
-    if (body.scope === 'USER' && !body.userId) {
-        throw createError({ statusCode: 400, statusMessage: 'User ID required for USER scope' });
-    }
-
-    const node = await StaticNode.create(body);
-
-    await logAudit({
-        actorAdminId: event.context.user.id,
-        action: 'CREATE_STATIC_NODE',
-        targetType: 'StaticNode',
-        targetId: String(node._id),
-        metadata: { name: body.name }
-    });
-
-    return node;
+  const actorAdminId = requireActorAdminId(event);
+  const body = await parseBody(event, createStaticNodeBodySchema);
+  return staticNodeService.create(actorAdminId, body);
 });

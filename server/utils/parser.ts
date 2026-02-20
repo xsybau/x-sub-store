@@ -12,6 +12,16 @@ export interface NodeFingerprint {
   name?: string; // Extracted name
 }
 
+const asString = (value: unknown): string =>
+  typeof value === "string" ? value : "";
+
+const asStringOrNumber = (value: unknown): string => {
+  if (typeof value === "string" || typeof value === "number") {
+    return String(value);
+  }
+  return "";
+};
+
 export const parseNode = (uri: string): NodeFingerprint | null => {
   try {
     uri = uri.trim();

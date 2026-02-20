@@ -1,25 +1,10 @@
-import { StaticNode } from '~/server/models/StaticNode';
-import { logAudit } from '~/server/utils/audit';
-import { CacheEntry } from '~/server/models/CacheEntry';
+import { requireActorAdminId } from "~/server/utils/services/types";
+import { staticNodeService } from "~/server/utils/services/static-node-service";
+import { parseRouteParams } from "~/server/utils/validation/parse";
+import { staticNodeIdParamsSchema } from "~/server/utils/validation/schemas/static-nodes";
 
 export default defineEventHandler(async (event) => {
-    const id = getRouterParam(event, 'id');
-
-    const node = await StaticNode.findByIdAndDelete(id);
-    if (!node) throw createError({ statusCode: 404 });
-
-    if (node.userId) {
-        await CacheEntry.deleteMany({ userId: node.userId });
-    } else {
-        await CacheEntry.deleteMany({});
-    }
-
-    await logAudit({
-        actorAdminId: event.context.user.id,
-        action: 'DELETE_STATIC_NODE',
-        targetType: 'StaticNode',
-        targetId: id
-    });
-
-    return { success: true };
+  const actorAdminId = requireActorAdminId(event);
+  const params = parseRouteParams(event, staticNodeIdParamsSchema);
+  return staticNodeService.remove(actorAdminId, params.id);
 });

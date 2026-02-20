@@ -150,6 +150,8 @@
 </template>
 
 <script setup lang="ts">
+import UsersListScreen from "~/modules/AdminUsers/screens/UsersListScreen.vue";
+
 definePageMeta({
   title: "Users",
   layout: "admin",
@@ -180,113 +182,4 @@ const {
 } = await useFetch<any[]>("/api/admin/users", {
   server: false,
 });
-const users = computed<UserRow[]>(() => {
-  return (usersRaw.value || []).map((user: any) => ({
-    _id: String(user?._id || ""),
-    label: user?.label || "",
-    email: user?.email || "",
-    isActive: Boolean(user?.isActive),
-  }));
-});
-const isOpen = ref(false);
-const creating = ref(false);
-const newUser = ref({ label: "", email: "" });
-const previewModalOpen = ref(false);
-const previewData = ref<any>(null);
-const previewTargetId = ref<string | null>(null);
-const previewTargetLabel = ref("");
-const previewingUserId = ref<string | null>(null);
-const togglingUserId = ref<string | null>(null);
-const deleteDialogOpen = ref(false);
-const deletingUserId = ref<string | null>(null);
-const deletingUser = ref(false);
-const toast = useToast();
-
-const createUser = async () => {
-  creating.value = true;
-  try {
-    await $fetch("/api/admin/users", {
-      method: "POST",
-      body: newUser.value,
-    });
-    isOpen.value = false;
-    newUser.value = { label: "", email: "" };
-    refresh();
-    toast.add({
-      title: "User created",
-      description: `Token generated successfully`,
-    });
-  } catch (e: any) {
-    toast.add({ title: "Error", description: e.data?.message, color: "error" });
-  } finally {
-    creating.value = false;
-  }
-};
-
-const previewFromList = async (user: UserRow) => {
-  previewTargetId.value = user._id;
-  previewTargetLabel.value = user.label || "User";
-  previewData.value = null;
-  previewModalOpen.value = true;
-  previewingUserId.value = user._id;
-
-  try {
-    const data: any = await $fetch(`/api/admin/users/${user._id}/preview`);
-    previewData.value = data;
-  } catch (e: any) {
-    previewModalOpen.value = false;
-    toast.add({
-      title: "Preview Failed",
-      description: e?.data?.message || e.message,
-      color: "error",
-    });
-  } finally {
-    previewingUserId.value = null;
-  }
-};
-
-const openDeleteDialog = (id: string) => {
-  deletingUserId.value = id;
-  deleteDialogOpen.value = true;
-};
-
-const toggleUserActive = async (user: UserRow) => {
-  togglingUserId.value = user._id;
-  try {
-    await $fetch(`/api/admin/users/${user._id}`, {
-      method: "PUT",
-      body: { isActive: !user.isActive },
-    });
-    await refresh();
-    toast.add({
-      title: user.isActive ? "User deactivated" : "User activated",
-      color: "success",
-    });
-  } catch (e: any) {
-    toast.add({
-      title: "Status update failed",
-      description: e?.data?.message || e.message,
-      color: "error",
-    });
-  } finally {
-    togglingUserId.value = null;
-  }
-};
-
-const deleteUser = async () => {
-  if (!deletingUserId.value) return;
-  deletingUser.value = true;
-  try {
-    await $fetch(`/api/admin/users/${deletingUserId.value}`, {
-      method: "DELETE",
-    });
-    refresh();
-    deleteDialogOpen.value = false;
-    deletingUserId.value = null;
-  } catch (e: any) {
-    toast.add({ title: "Error", description: e.data?.message, color: "error" });
-  } finally {
-    deletingUser.value = false;
-  }
-};
 </script>

@@ -60,8 +60,7 @@ async function main() {
     process.exit(1);
   } finally {
     await mongoose.disconnect();
-    process.exit(0);
   }
 }
 
-main();
+void main();
