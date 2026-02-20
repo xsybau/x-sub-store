@@ -4,14 +4,18 @@
       <div class="flex items-center gap-3">
         <h2 class="text-2xl font-bold">{{ user.label }}</h2>
         <UBadge :color="user.isActive ? 'success' : 'error'" variant="subtle">
-          {{ user.isActive ? "Active" : "Inactive" }}
+          {{
+            user.isActive
+              ? t("common.status.active")
+              : t("common.status.inactive")
+          }}
         </UBadge>
       </div>
 
       <div class="flex space-x-2">
-        <UButton variant="soft" :loading="previewLoading" @click="preview"
-          >Preview Subscription</UButton
-        >
+        <UButton variant="soft" :loading="previewLoading" @click="preview">
+          {{ t("adminUsers.userDetails.previewSubscriptionButton") }}
+        </UButton>
         <UButton
           variant="soft"
           :color="user.isActive ? 'warning' : 'success'"
@@ -23,33 +27,43 @@
           "
           @click="toggleUserStatus"
         >
-          {{ user.isActive ? "Deactivate" : "Activate" }}
+          {{
+            user.isActive
+              ? t("adminUsers.userDetails.deactivateButton")
+              : t("adminUsers.userDetails.activateButton")
+          }}
         </UButton>
-        <UButton color="error" @click="deleteDialogOpen = true"
-          >Delete User</UButton
-        >
+        <UButton color="error" @click="deleteDialogOpen = true">
+          {{ t("adminUsers.userDetails.deleteUserButton") }}
+        </UButton>
       </div>
     </div>
 
     <UCard class="mb-8">
       <template #header>
-        <h3 class="text-lg font-bold">Admin Notes</h3>
+        <h3 class="text-lg font-bold">
+          {{ t("adminUsers.userDetails.cards.adminNotes") }}
+        </h3>
       </template>
 
       <div class="space-y-3">
-        <UFormField label="Description (Admin Only)">
+        <UFormField
+          :label="t('adminUsers.userDetails.fields.descriptionAdminOnly')"
+        >
           <UTextarea
             v-model="editableDescription"
             class="w-full"
             :rows="4"
             :maxlength="500"
-            placeholder="Internal notes for this user"
+            :placeholder="
+              t('adminUsers.userDetails.fields.descriptionPlaceholder')
+            "
           />
         </UFormField>
 
         <div class="flex items-center justify-between">
           <p class="text-xs text-muted">
-            This note is visible only in admin user management screens.
+            {{ t("adminUsers.userDetails.notes.adminOnlyVisibility") }}
           </p>
           <UButton
             size="sm"
@@ -57,7 +71,7 @@
             :disabled="!isDescriptionDirty"
             @click="saveDescription"
           >
-            Save Description
+            {{ t("adminUsers.userDetails.buttons.saveDescription") }}
           </UButton>
         </div>
       </div>
@@ -65,7 +79,9 @@
 
     <UCard class="mb-8">
       <template #header>
-        <h3 class="text-lg font-bold">User Tags</h3>
+        <h3 class="text-lg font-bold">
+          {{ t("adminUsers.userDetails.cards.userTags") }}
+        </h3>
       </template>
 
       <div class="space-y-3">
@@ -78,34 +94,28 @@
           >
             {{ getTagName(tagId) }}
           </UBadge>
-          <span v-if="!editableTagIds.length" class="text-sm text-muted"
-            >-</span
-          >
+          <span v-if="!editableTagIds.length" class="text-sm text-muted">
+            {{ t("common.labels.noValue") }}
+          </span>
         </div>
 
-        <UFormField label="Assigned Tags">
+        <UFormField :label="t('adminUsers.userDetails.fields.assignedTags')">
           <UInputMenu
             v-model="editableTagIds"
             :items="tags"
             label-key="name"
             value-key="_id"
             :multiple="true"
-            placeholder="Select user tags"
+            :placeholder="
+              t('adminUsers.userDetails.fields.userTagsPlaceholder')
+            "
             class="w-full"
           />
         </UFormField>
 
         <div class="flex justify-end">
           <p class="text-xs text-muted">
-            {{
-              savingTags
-                ? "Saving..."
-                : tagSaveError
-                  ? "Autosave failed. Edit tags again to retry."
-                  : isTagSelectionDirty
-                    ? "Pending save..."
-                    : "Changes save automatically."
-            }}
+            {{ tagSaveStatusText }}
           </p>
         </div>
       </div>
@@ -113,7 +123,9 @@
 
     <UCard class="mb-8">
       <template #header>
-        <h3 class="text-lg font-bold">Subscription URL</h3>
+        <h3 class="text-lg font-bold">
+          {{ t("adminUsers.userDetails.cards.subscriptionUrl") }}
+        </h3>
       </template>
 
       <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
@@ -126,32 +138,43 @@
         </UTooltip>
 
         <div class="flex gap-2">
-          <UButton icon="i-heroicons-clipboard" @click="copyUrl">Copy</UButton>
+          <UButton icon="i-heroicons-clipboard" @click="copyUrl">
+            {{ t("adminUsers.userDetails.buttons.copy") }}
+          </UButton>
           <UButton
             color="warning"
             icon="i-heroicons-arrow-path"
             @click="rotateDialogOpen = true"
-            >Rotate Token</UButton
           >
+            {{ t("adminUsers.userDetails.buttons.rotateToken") }}
+          </UButton>
         </div>
       </div>
 
       <p class="mt-2 font-mono text-xs text-gray-500">
-        Token: {{ user.token }}
+        {{
+          t("adminUsers.userDetails.fields.tokenLabel", {
+            token: user.token || "",
+          })
+        }}
       </p>
     </UCard>
 
     <div class="grid grid-cols-1 gap-8">
       <UCard>
         <template #header>
-          <h3 class="text-lg font-bold">User Upstreams</h3>
+          <h3 class="text-lg font-bold">
+            {{ t("adminUsers.userDetails.cards.userUpstreams") }}
+          </h3>
         </template>
         <UpstreamManager scope="USER" :user-id="user._id" />
       </UCard>
 
       <UCard>
         <template #header>
-          <h3 class="text-lg font-bold">User Static Nodes</h3>
+          <h3 class="text-lg font-bold">
+            {{ t("adminUsers.userDetails.cards.userStaticNodes") }}
+          </h3>
         </template>
         <StaticNodeManager scope="USER" :user-id="user._id" />
       </UCard>
@@ -160,13 +183,15 @@
     <UModal
       v-model:open="showPreview"
       fullscreen
-      title="Subscription Preview"
-      description="Inspect generated nodes and upstream status for this user."
+      :title="t('adminUsers.userDetails.previewModal.title')"
+      :description="t('adminUsers.userDetails.previewModal.description')"
     >
       <template #content>
         <div class="flex h-full flex-col p-6">
           <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-xl font-bold">Subscription Preview</h3>
+            <h3 class="text-xl font-bold">
+              {{ t("adminUsers.userDetails.previewModal.heading") }}
+            </h3>
             <UButton
               variant="ghost"
               icon="i-heroicons-x-mark"
@@ -183,22 +208,30 @@
           <div v-else-if="previewData" class="flex-1 space-y-4 overflow-auto">
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <UCard>
-                <h4 class="font-bold text-gray-500">Total Nodes</h4>
+                <h4 class="font-bold text-gray-500">
+                  {{ t("adminUsers.userDetails.previewModal.totalNodes") }}
+                </h4>
                 <p class="text-2xl">{{ previewData.stats.uniqueNodes }}</p>
               </UCard>
               <UCard>
-                <h4 class="font-bold text-gray-500">Raw Nodes</h4>
+                <h4 class="font-bold text-gray-500">
+                  {{ t("adminUsers.userDetails.previewModal.rawNodes") }}
+                </h4>
                 <p class="text-2xl">{{ previewData.stats.totalRawNodes }}</p>
               </UCard>
               <UCard>
-                <h4 class="font-bold text-gray-500">Upstreams</h4>
+                <h4 class="font-bold text-gray-500">
+                  {{ t("adminUsers.userDetails.previewModal.upstreams") }}
+                </h4>
                 <p class="text-2xl">{{ previewData.stats.upstreams }}</p>
               </UCard>
             </div>
 
             <UCard>
               <template #header>
-                <h4 class="font-bold">Upstream Status</h4>
+                <h4 class="font-bold">
+                  {{ t("adminUsers.userDetails.previewModal.upstreamStatus") }}
+                </h4>
               </template>
               <UTable
                 class="table-fixed"
@@ -218,14 +251,18 @@
                     :color="row.original.status === 'OK' ? 'success' : 'error'"
                     variant="subtle"
                   >
-                    {{ row.original.status === "OK" ? "Healthy" : "Issue" }}
+                    {{
+                      row.original.status === "OK"
+                        ? t("common.status.healthy")
+                        : t("common.status.issue")
+                    }}
                   </UBadge>
                 </template>
 
                 <template #error-cell="{ row }">
-                  <span v-if="!row.original.error" class="text-xs text-muted"
-                    >-</span
-                  >
+                  <span v-if="!row.original.error" class="text-xs text-muted">
+                    {{ t("common.labels.noValue") }}
+                  </span>
                   <UTooltip v-else :text="row.original.error">
                     <p
                       class="max-w-44 truncate font-mono text-xs text-error sm:max-w-[18rem]"
@@ -240,8 +277,12 @@
             <UCard>
               <template #header>
                 <div class="flex justify-between">
-                  <h4 class="font-bold">Nodes</h4>
-                  <UButton size="xs" @click="copyNodes">Copy</UButton>
+                  <h4 class="font-bold">
+                    {{ t("adminUsers.userDetails.previewModal.nodes") }}
+                  </h4>
+                  <UButton size="xs" @click="copyNodes">
+                    {{ t("adminUsers.userDetails.buttons.copyNodes") }}
+                  </UButton>
                 </div>
               </template>
               <pre
@@ -256,9 +297,9 @@
 
     <ConfirmDialog
       v-model:open="rotateDialogOpen"
-      title="Rotate User Token"
-      description="This will invalidate the current subscription URL and issue a new one."
-      confirm-label="Rotate Token"
+      :title="t('adminUsers.userDetails.rotateDialog.title')"
+      :description="t('adminUsers.userDetails.rotateDialog.description')"
+      :confirm-label="t('adminUsers.userDetails.rotateDialog.confirmLabel')"
       confirm-color="warning"
       :loading="rotatingToken"
       @confirm="rotateToken"
@@ -266,9 +307,9 @@
 
     <ConfirmDialog
       v-model:open="deleteDialogOpen"
-      title="Delete User"
-      description="This will permanently remove the user and all of their data."
-      confirm-label="Delete User"
+      :title="t('adminUsers.userDetails.deleteDialog.title')"
+      :description="t('adminUsers.userDetails.deleteDialog.description')"
+      :confirm-label="t('adminUsers.userDetails.deleteDialog.confirmLabel')"
       confirm-color="error"
       :loading="deletingUser"
       @confirm="deleteUser"
@@ -277,6 +318,7 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import type { FetchError } from "ofetch";
 import ConfirmDialog from "~/components/ConfirmDialog.vue";
 import StaticNodeManager from "~/modules/AdminSources/components/StaticNodeManager.vue";
@@ -298,6 +340,7 @@ import {
 const route = useRoute();
 const toast = useToast();
 const runtimeConfig = useRuntimeConfig();
+const { t } = useI18n();
 
 const normalizeBaseUrl = (value: string): string => {
   return value.trim().replace(/\/+$/, "");
@@ -360,7 +403,10 @@ const { data: user, refresh } = useAsyncData<UserWithToken | null>(
   () => `admin-user-${userId.value}`,
   async () => {
     if (!userId.value) {
-      throw createError({ statusCode: 400, statusMessage: "Invalid user id" });
+      throw createError({
+        statusCode: 400,
+        statusMessage: t("adminUsers.errors.invalidUserId"),
+      });
     }
     return getUserApi(userId.value);
   },
@@ -382,7 +428,11 @@ const { data: tagsData } = useAsyncData<TagItem[]>(
 
 const userPageTitle = computed(() => {
   const label = user.value?.label.trim();
-  return label ? `${label} - Users` : "Users";
+  if (label) {
+    return t("adminUsers.userDetails.pageTitle.withLabel", { label });
+  }
+
+  return t("adminUsers.userDetails.pageTitle.fallback");
 });
 
 useHead(() => ({
@@ -412,7 +462,7 @@ const tagNameMap = computed<Map<string, string>>(() => {
 });
 
 const getTagName = (tagId: string) => {
-  return tagNameMap.value.get(tagId) || "Unknown tag";
+  return tagNameMap.value.get(tagId) || t("common.labels.unknownTag");
 };
 
 watch(
@@ -445,15 +495,40 @@ const isDescriptionDirty = computed(() => {
   return (user.value?.description || "") !== editableDescription.value.trim();
 });
 
-const previewStatusColumns = [
-  { accessorKey: "source", header: "Upstream" },
-  { accessorKey: "status", header: "Status" },
-  { accessorKey: "error", header: "Error" },
-];
+const tagSaveStatusText = computed(() => {
+  if (savingTags.value) {
+    return t("adminUsers.userDetails.notes.tagsSaving");
+  }
+
+  if (tagSaveError.value) {
+    return t("adminUsers.userDetails.notes.tagsAutosaveFailed");
+  }
+
+  if (isTagSelectionDirty.value) {
+    return t("adminUsers.userDetails.notes.tagsPendingSave");
+  }
+
+  return t("adminUsers.userDetails.notes.tagsAutoSaved");
+});
+
+const previewStatusColumns = computed(() => [
+  {
+    accessorKey: "source",
+    header: t("adminUsers.userDetails.previewModal.table.upstream"),
+  },
+  {
+    accessorKey: "status",
+    header: t("adminUsers.userDetails.previewModal.table.status"),
+  },
+  {
+    accessorKey: "error",
+    header: t("adminUsers.userDetails.previewModal.table.error"),
+  },
+]);
 
 const getErrorMessage = (error: unknown): string => {
   if (typeof error !== "object" || !error) {
-    return "Unexpected error";
+    return t("common.errors.unexpected");
   }
 
   const candidate = error as FetchError;
@@ -462,7 +537,7 @@ const getErrorMessage = (error: unknown): string => {
       ? (candidate.data as { message?: string }).message
       : undefined;
 
-  return message || candidate.message || "Unexpected error";
+  return message || candidate.message || t("common.errors.unexpected");
 };
 
 const subUrl = computed(() => {
@@ -495,7 +570,10 @@ const subUrl = computed(() => {
 
 const copyUrl = async () => {
   await navigator.clipboard.writeText(subUrl.value);
-  toast.add({ title: "Copied", color: "success" });
+  toast.add({
+    title: t("adminUsers.userDetails.toasts.copied"),
+    color: "success",
+  });
 };
 
 const copyNodes = async () => {
@@ -504,7 +582,10 @@ const copyNodes = async () => {
   }
 
   await navigator.clipboard.writeText(previewData.value.nodes.join("\n"));
-  toast.add({ title: "Copied Nodes", color: "success" });
+  toast.add({
+    title: t("adminUsers.userDetails.toasts.copiedNodes"),
+    color: "success",
+  });
 };
 
 const triggerAutoSave = () => {
@@ -558,7 +639,7 @@ const saveUserTags = async () => {
   } catch (error) {
     tagSaveError.value = getErrorMessage(error);
     toast.add({
-      title: "Tag update failed",
+      title: t("adminUsers.userDetails.toasts.tagUpdateFailed"),
       description: tagSaveError.value,
       color: "error",
     });
@@ -583,12 +664,12 @@ const saveDescription = async () => {
     });
     await refresh();
     toast.add({
-      title: "Description saved",
+      title: t("adminUsers.userDetails.toasts.descriptionSaved"),
       color: "success",
     });
   } catch (error) {
     toast.add({
-      title: "Description update failed",
+      title: t("adminUsers.userDetails.toasts.descriptionUpdateFailed"),
       description: getErrorMessage(error),
       color: "error",
     });
@@ -607,10 +688,13 @@ const rotateToken = async () => {
     await rotateUserTokenApi(userId.value);
     await refresh();
     rotateDialogOpen.value = false;
-    toast.add({ title: "Token Rotated", color: "success" });
+    toast.add({
+      title: t("adminUsers.userDetails.toasts.tokenRotated"),
+      color: "success",
+    });
   } catch (error) {
     toast.add({
-      title: "Error",
+      title: t("common.toast.errorTitle"),
       description: getErrorMessage(error),
       color: "error",
     });
@@ -633,12 +717,14 @@ const toggleUserStatus = async () => {
     });
     await refresh();
     toast.add({
-      title: nextState ? "User activated" : "User deactivated",
+      title: nextState
+        ? t("adminUsers.userDetails.toasts.userActivated")
+        : t("adminUsers.userDetails.toasts.userDeactivated"),
       color: "success",
     });
   } catch (error) {
     toast.add({
-      title: "Error",
+      title: t("common.toast.errorTitle"),
       description: getErrorMessage(error),
       color: "error",
     });
@@ -659,7 +745,7 @@ const deleteUser = async () => {
     await navigateTo("/admin/users");
   } catch (error) {
     toast.add({
-      title: "Error",
+      title: t("common.toast.errorTitle"),
       description: getErrorMessage(error),
       color: "error",
     });
@@ -682,7 +768,7 @@ const preview = async () => {
   } catch (error) {
     showPreview.value = false;
     toast.add({
-      title: "Preview Failed",
+      title: t("adminUsers.userDetails.toasts.previewFailed"),
       description: getErrorMessage(error),
       color: "error",
     });

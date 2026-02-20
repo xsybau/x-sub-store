@@ -1,14 +1,20 @@
 <template>
   <div>
     <div class="mb-6 flex items-center justify-between">
-      <h2 class="text-2xl font-bold">Users</h2>
-      <UButton @click="isCreateDialogOpen = true">Add User</UButton>
+      <h2 class="text-2xl font-bold">{{ t("adminUsers.usersList.title") }}</h2>
+      <UButton @click="isCreateDialogOpen = true">
+        {{ t("adminUsers.usersList.addUserButton") }}
+      </UButton>
     </div>
 
     <UTable :data="users" :columns="columns" :loading="pending">
       <template #isActive-cell="{ row }">
         <UBadge :color="row.original.isActive ? 'success' : 'error'">
-          {{ row.original.isActive ? "Active" : "Inactive" }}
+          {{
+            row.original.isActive
+              ? t("common.status.active")
+              : t("common.status.inactive")
+          }}
         </UBadge>
       </template>
 
@@ -24,14 +30,14 @@
             {{ getTagName(tagId) }}
           </UBadge>
           <span v-if="!row.original.tagIds?.length" class="text-xs text-muted">
-            -
+            {{ t("common.labels.noValue") }}
           </span>
         </div>
       </template>
 
       <template #description-cell="{ row }">
         <span v-if="!row.original.description" class="text-xs text-muted">
-          -
+          {{ t("common.labels.noValue") }}
         </span>
         <UTooltip v-else :text="row.original.description">
           <p class="max-w-56 truncate text-sm text-toned">
@@ -45,14 +51,14 @@
           <UButton
             variant="ghost"
             icon="i-heroicons-clipboard-document-list"
-            title="Copy Subscription URL"
+            :title="t('adminUsers.usersList.actions.copySubscriptionUrl')"
             :loading="copyingUrlUserId === row.original._id"
             @click="copySubscriptionUrl(row.original)"
           />
           <UButton
             variant="ghost"
             icon="i-heroicons-eye"
-            title="Preview Subscription"
+            :title="t('adminUsers.usersList.actions.previewSubscription')"
             :loading="previewingUserId === row.original._id"
             @click="previewFromList(row.original)"
           />
@@ -65,7 +71,11 @@
                 : 'i-heroicons-play-circle'
             "
             :loading="togglingUserId === row.original._id"
-            :title="row.original.isActive ? 'Deactivate User' : 'Activate User'"
+            :title="
+              row.original.isActive
+                ? t('adminUsers.usersList.actions.deactivateUser')
+                : t('adminUsers.usersList.actions.activateUser')
+            "
             @click="toggleUserActive(row.original)"
           />
           <UButton
@@ -85,47 +95,67 @@
 
     <UModal
       v-model:open="isCreateDialogOpen"
-      title="Create User"
-      description="Add a new user with optional email and admin-only notes."
+      :title="t('adminUsers.usersList.createModal.title')"
+      :description="t('adminUsers.usersList.createModal.description')"
     >
       <template #content>
         <div class="p-6">
-          <h3 class="mb-4 text-lg font-bold">Create User</h3>
+          <h3 class="mb-4 text-lg font-bold">
+            {{ t("adminUsers.usersList.createModal.heading") }}
+          </h3>
           <form class="w-full space-y-4" @submit.prevent="createUser">
-            <UFormField label="Label" class="w-full">
+            <UFormField
+              :label="t('adminUsers.usersList.createModal.labelField')"
+              class="w-full"
+            >
               <UInput v-model="newUser.label" class="w-full" required />
             </UFormField>
-            <UFormField label="Email" class="w-full">
+            <UFormField
+              :label="t('adminUsers.usersList.createModal.emailField')"
+              class="w-full"
+            >
               <UInput v-model="newUser.email" class="w-full" type="email" />
             </UFormField>
-            <UFormField label="Description (Admin Only)" class="w-full">
+            <UFormField
+              :label="t('adminUsers.usersList.createModal.descriptionField')"
+              class="w-full"
+            >
               <UTextarea
                 v-model="newUser.description"
                 class="w-full"
                 :rows="3"
                 :maxlength="500"
-                placeholder="Internal note for this user"
+                :placeholder="
+                  t('adminUsers.usersList.createModal.descriptionPlaceholder')
+                "
               />
             </UFormField>
-            <UFormField label="Tags" class="w-full">
+            <UFormField
+              :label="t('adminUsers.usersList.createModal.tagsField')"
+              class="w-full"
+            >
               <UInputMenu
                 v-model="newUser.tagIds"
                 :items="tags"
                 label-key="name"
                 value-key="_id"
                 :multiple="true"
-                placeholder="Select tags"
+                :placeholder="
+                  t('adminUsers.usersList.createModal.tagsPlaceholder')
+                "
                 class="w-full"
               />
               <p class="mt-1 text-xs text-muted">
-                Default tags are added automatically for new users.
+                {{ t("adminUsers.usersList.createModal.tagsHint") }}
               </p>
             </UFormField>
             <div class="flex justify-end space-x-2">
-              <UButton variant="ghost" @click="isCreateDialogOpen = false"
-                >Cancel</UButton
-              >
-              <UButton type="submit" :loading="creating">Create</UButton>
+              <UButton variant="ghost" @click="isCreateDialogOpen = false">
+                {{ t("common.actions.cancel") }}
+              </UButton>
+              <UButton type="submit" :loading="creating">
+                {{ t("common.actions.create") }}
+              </UButton>
             </div>
           </form>
         </div>
@@ -134,8 +164,14 @@
 
     <UModal
       v-model:open="previewModalOpen"
-      :title="`Preview: ${previewTargetLabel || 'User'}`"
-      description="Quick subscription preview directly from the users table."
+      :title="
+        t('adminUsers.usersList.previewModal.title', {
+          label:
+            previewTargetLabel ||
+            t('adminUsers.usersList.previewModal.userFallback'),
+        })
+      "
+      :description="t('adminUsers.usersList.previewModal.description')"
     >
       <template #content>
         <div class="space-y-4 p-6">
@@ -149,7 +185,7 @@
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <UCard>
                 <p class="text-xs uppercase tracking-wide text-muted">
-                  Unique Nodes
+                  {{ t("adminUsers.usersList.previewModal.uniqueNodes") }}
                 </p>
                 <p class="mt-1 text-xl font-semibold">
                   {{ previewData.stats.uniqueNodes }}
@@ -157,7 +193,7 @@
               </UCard>
               <UCard>
                 <p class="text-xs uppercase tracking-wide text-muted">
-                  Raw Nodes
+                  {{ t("adminUsers.usersList.previewModal.rawNodes") }}
                 </p>
                 <p class="mt-1 text-xl font-semibold">
                   {{ previewData.stats.totalRawNodes }}
@@ -165,7 +201,7 @@
               </UCard>
               <UCard>
                 <p class="text-xs uppercase tracking-wide text-muted">
-                  Upstreams
+                  {{ t("adminUsers.usersList.previewModal.upstreams") }}
                 </p>
                 <p class="mt-1 text-xl font-semibold">
                   {{ previewData.stats.upstreams }}
@@ -176,14 +212,16 @@
             <UCard>
               <template #header>
                 <div class="flex items-center justify-between">
-                  <h4 class="font-semibold">First Nodes</h4>
+                  <h4 class="font-semibold">
+                    {{ t("adminUsers.usersList.previewModal.firstNodes") }}
+                  </h4>
                   <UButton
                     v-if="previewTargetId"
                     :to="`/admin/users/${previewTargetId}`"
                     size="xs"
                     variant="soft"
                   >
-                    Open Full Page
+                    {{ t("adminUsers.usersList.previewModal.openFullPage") }}
                   </UButton>
                 </div>
               </template>
@@ -199,9 +237,9 @@
 
     <ConfirmDialog
       v-model:open="deleteDialogOpen"
-      title="Delete User"
-      description="This will permanently delete the user and all related data."
-      confirm-label="Delete User"
+      :title="t('adminUsers.usersList.deleteDialog.title')"
+      :description="t('adminUsers.usersList.deleteDialog.description')"
+      :confirm-label="t('adminUsers.usersList.deleteDialog.confirmLabel')"
       confirm-color="error"
       :loading="deletingUser"
       @confirm="deleteUser"
@@ -210,6 +248,7 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import type { FetchError } from "ofetch";
 import ConfirmDialog from "~/components/ConfirmDialog.vue";
 import type { TagItem } from "~/modules/AdminUsers/types/tags";
@@ -228,14 +267,25 @@ import {
   updateUserApi,
 } from "~/modules/AdminUsers/utils/usersApi";
 
-const columns = [
-  { accessorKey: "label", header: "Name" },
-  { accessorKey: "email", header: "Email" },
-  { accessorKey: "description", header: "Description" },
-  { accessorKey: "tagIds", header: "Tags" },
-  { accessorKey: "isActive", header: "Status" },
-  { accessorKey: "actions", header: "Actions" },
-];
+const { t } = useI18n();
+
+const columns = computed(() => [
+  { accessorKey: "label", header: t("adminUsers.usersList.columns.name") },
+  { accessorKey: "email", header: t("adminUsers.usersList.columns.email") },
+  {
+    accessorKey: "description",
+    header: t("adminUsers.usersList.columns.description"),
+  },
+  { accessorKey: "tagIds", header: t("adminUsers.usersList.columns.tags") },
+  {
+    accessorKey: "isActive",
+    header: t("adminUsers.usersList.columns.status"),
+  },
+  {
+    accessorKey: "actions",
+    header: t("adminUsers.usersList.columns.actions"),
+  },
+]);
 
 const requestHeaders = import.meta.server
   ? useRequestHeaders(["cookie"])
@@ -293,12 +343,12 @@ const tagNameMap = computed<Map<string, string>>(() => {
 });
 
 const getTagName = (tagId: string): string => {
-  return tagNameMap.value.get(tagId) || "Unknown tag";
+  return tagNameMap.value.get(tagId) || t("common.labels.unknownTag");
 };
 
 const getErrorMessage = (error: unknown): string => {
   if (typeof error !== "object" || !error) {
-    return "Unexpected error";
+    return t("common.errors.unexpected");
   }
 
   const candidate = error as FetchError;
@@ -307,7 +357,7 @@ const getErrorMessage = (error: unknown): string => {
       ? (candidate.data as { message?: string }).message
       : undefined;
 
-  return message || candidate.message || "Unexpected error";
+  return message || candidate.message || t("common.errors.unexpected");
 };
 
 const normalizeBaseUrl = (value: string): string => {
@@ -389,12 +439,12 @@ const createUser = async () => {
     newUser.value = { label: "", email: "", description: "", tagIds: [] };
     await refresh();
     toast.add({
-      title: "User created",
-      description: "Token generated successfully",
+      title: t("adminUsers.usersList.toasts.userCreated"),
+      description: t("adminUsers.usersList.toasts.tokenGenerated"),
     });
   } catch (error) {
     toast.add({
-      title: "Error",
+      title: t("common.toast.errorTitle"),
       description: getErrorMessage(error),
       color: "error",
     });
@@ -410,7 +460,7 @@ const copySubscriptionUrl = async (user: UserItem) => {
     if (!userWithToken.token) {
       throw createError({
         statusCode: 400,
-        statusMessage: "User has no active token",
+        statusMessage: t("adminUsers.errors.userHasNoActiveToken"),
       });
     }
 
@@ -418,12 +468,12 @@ const copySubscriptionUrl = async (user: UserItem) => {
       buildSubscriptionUrl(userWithToken.token),
     );
     toast.add({
-      title: "Subscription URL copied",
+      title: t("adminUsers.usersList.toasts.subscriptionUrlCopied"),
       color: "success",
     });
   } catch (error) {
     toast.add({
-      title: "Copy failed",
+      title: t("adminUsers.usersList.toasts.copyFailed"),
       description: getErrorMessage(error),
       color: "error",
     });
@@ -434,7 +484,8 @@ const copySubscriptionUrl = async (user: UserItem) => {
 
 const previewFromList = async (user: UserItem) => {
   previewTargetId.value = user._id;
-  previewTargetLabel.value = user.label || "User";
+  previewTargetLabel.value =
+    user.label || t("adminUsers.usersList.previewModal.userFallback");
   previewData.value = null;
   previewModalOpen.value = true;
   previewingUserId.value = user._id;
@@ -444,7 +495,7 @@ const previewFromList = async (user: UserItem) => {
   } catch (error) {
     previewModalOpen.value = false;
     toast.add({
-      title: "Preview Failed",
+      title: t("adminUsers.usersList.toasts.previewFailed"),
       description: getErrorMessage(error),
       color: "error",
     });
@@ -468,12 +519,14 @@ const toggleUserActive = async (user: UserItem) => {
     });
     await refresh();
     toast.add({
-      title: nextState ? "User activated" : "User deactivated",
+      title: nextState
+        ? t("adminUsers.usersList.toasts.userActivated")
+        : t("adminUsers.usersList.toasts.userDeactivated"),
       color: "success",
     });
   } catch (error) {
     toast.add({
-      title: "Status update failed",
+      title: t("adminUsers.usersList.toasts.statusUpdateFailed"),
       description: getErrorMessage(error),
       color: "error",
     });
@@ -495,7 +548,7 @@ const deleteUser = async () => {
     deletingUserId.value = null;
   } catch (error) {
     toast.add({
-      title: "Error",
+      title: t("common.toast.errorTitle"),
       description: getErrorMessage(error),
       color: "error",
     });

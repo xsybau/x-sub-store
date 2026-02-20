@@ -2,7 +2,7 @@
   <div
     class="min-h-screen bg-linear-to-br from-violet-50 via-white to-indigo-100 dark:from-gray-950 dark:via-gray-900 dark:to-violet-950"
   >
-    <div class="flex min-h-screen">
+    <div class="flex min-h-screen lg:flex-row">
       <div
         v-if="mobileMenuOpen"
         class="fixed inset-0 z-40 bg-black/45 backdrop-blur-[2px] lg:hidden"
@@ -10,12 +10,8 @@
       />
 
       <aside
-        class="fixed inset-y-0 left-0 z-50 w-[84vw] max-w-sm border-r border-default/70 bg-white/90 backdrop-blur-md dark:bg-gray-900/90 flex flex-col transition-transform duration-300 lg:static lg:z-10 lg:w-80 lg:max-w-none lg:translate-x-0"
-        :class="
-          mobileMenuOpen
-            ? 'translate-x-0'
-            : '-translate-x-full lg:translate-x-0'
-        "
+        class="fixed inset-y-0 z-50 h-screen max-h-screen w-[84vw] max-w-sm overflow-hidden border-default/70 bg-white/90 backdrop-blur-md transition-transform duration-300 dark:bg-gray-900/90 flex flex-col lg:sticky lg:top-0 lg:z-10 lg:w-80 lg:max-w-none lg:translate-x-0"
+        :class="[asideSideClass, mobileMenuAsideClass]"
       >
         <div class="p-6 border-b border-default/70">
           <div class="flex items-start justify-between gap-3">
@@ -29,10 +25,10 @@
                 <p
                   class="text-[11px] uppercase tracking-[0.2em] text-primary/80"
                 >
-                  Control
+                  {{ t("shell.admin.brandCaption") }}
                 </p>
                 <h1 class="text-xl font-semibold text-highlighted">
-                  X-SUB-Store
+                  {{ t("shell.admin.brandTitle") }}
                 </h1>
               </div>
             </div>
@@ -41,12 +37,12 @@
               variant="ghost"
               color="neutral"
               icon="i-heroicons-x-mark"
-              aria-label="Close menu"
+              :aria-label="t('shell.admin.closeMenuAria')"
               @click="mobileMenuOpen = false"
             />
           </div>
           <p class="mt-3 text-xs text-muted">
-            Manage subscriptions, users and upstream sources from one panel.
+            {{ t("shell.admin.subtitle") }}
           </p>
         </div>
 
@@ -88,10 +84,21 @@
           <div
             class="rounded-2xl border border-default/70 bg-default/40 p-3 space-y-3"
           >
-            <UBadge color="primary" variant="subtle">Admin Console</UBadge>
-            <UButton variant="soft" color="error" block @click="logout"
-              >Logout</UButton
-            >
+            <UFormField :label="t('shell.admin.languageLabel')" class="w-full">
+              <UInputMenu
+                v-model="selectedLocale"
+                :items="localeOptions"
+                label-key="label"
+                value-key="value"
+                class="w-full"
+              />
+            </UFormField>
+            <UBadge color="primary" variant="subtle">
+              {{ t("shell.admin.badge") }}
+            </UBadge>
+            <UButton variant="soft" color="error" block @click="logout">
+              {{ t("common.actions.logout") }}
+            </UButton>
           </div>
         </div>
       </aside>
@@ -116,40 +123,74 @@
           :name="mobileMenuOpen ? 'i-heroicons-x-mark' : 'i-heroicons-bars-3'"
           class="size-4"
         />
-        <span>{{ mobileMenuOpen ? "Close Menu" : "Open Menu" }}</span>
+        <span>
+          {{
+            mobileMenuOpen
+              ? t("shell.admin.mobileMenu.close")
+              : t("shell.admin.mobileMenu.open")
+          }}
+        </span>
       </UButton>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
+
 const route = useRoute();
+const { t } = useI18n();
 const { logout } = useAuth();
 const mobileMenuOpen = ref(false);
+const { locale, setLocale, isRtl, localeOptions } = useAppLocale();
 
-const links = [
+const selectedLocale = computed({
+  get: () => locale.value,
+  set: (value: unknown) => {
+    setLocale(value);
+  },
+});
+
+const links = computed(() => [
   {
-    label: "Users",
+    label: t("shell.admin.nav.users.label"),
     to: "/admin/users",
     icon: "i-heroicons-users",
-    description: "Create users, rotate tokens and inspect subscriptions",
+    description: t("shell.admin.nav.users.description"),
   },
   {
-    label: "Tags",
+    label: t("shell.admin.nav.tags.label"),
     to: "/admin/tags",
     icon: "i-heroicons-tag",
-    description: "Manage user tags, defaults and tag-level source targeting",
+    description: t("shell.admin.nav.tags.description"),
   },
   {
-    label: "Global Settings",
+    label: t("shell.admin.nav.settings.label"),
     to: "/admin/settings",
     icon: "i-heroicons-cog-6-tooth",
-    description: "Manage global upstreams and shared static nodes",
+    description: t("shell.admin.nav.settings.description"),
   },
-];
+]);
 
-const isActive = (to: string) =>
-  route.path === to || route.path.startsWith(`${to}/`);
+const asideSideClass = computed(() => {
+  return isRtl.value
+    ? "right-0 border-l lg:right-auto"
+    : "left-0 border-r lg:left-auto";
+});
+
+const mobileMenuAsideClass = computed(() => {
+  if (mobileMenuOpen.value) {
+    return "translate-x-0";
+  }
+
+  return isRtl.value
+    ? "translate-x-full lg:translate-x-0"
+    : "-translate-x-full lg:translate-x-0";
+});
+
+const isActive = (to: string) => {
+  return route.path === to || route.path.startsWith(`${to}/`);
+};
 
 watch(
   () => route.fullPath,

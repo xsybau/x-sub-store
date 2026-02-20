@@ -1,3 +1,4 @@
+import { useI18n } from "vue-i18n";
 import type { FetchError } from "ofetch";
 import type {
   SourceScope,
@@ -21,24 +22,6 @@ interface StaticNodeFormState {
   content: string;
 }
 
-const getErrorMessage = (error: unknown): string => {
-  if (typeof error !== "object" || !error) {
-    return "Unknown error";
-  }
-
-  const candidate = error as FetchError;
-  const message =
-    candidate.data && typeof candidate.data === "object"
-      ? (candidate.data as { message?: string }).message
-      : undefined;
-
-  if (message) {
-    return message;
-  }
-
-  return candidate.message || "Unknown error";
-};
-
 const getInitialStaticNodeForm = (): StaticNodeFormState => ({
   name: "",
   content: "",
@@ -46,6 +29,25 @@ const getInitialStaticNodeForm = (): StaticNodeFormState => ({
 
 export const useStaticNodeManager = (options: UseStaticNodeManagerOptions) => {
   const toast = useToast();
+  const { t } = useI18n();
+
+  const getErrorMessage = (error: unknown): string => {
+    if (typeof error !== "object" || !error) {
+      return t("common.errors.unknown");
+    }
+
+    const candidate = error as FetchError;
+    const message =
+      candidate.data && typeof candidate.data === "object"
+        ? (candidate.data as { message?: string }).message
+        : undefined;
+
+    if (message) {
+      return message;
+    }
+
+    return candidate.message || t("common.errors.unknown");
+  };
 
   const query = computed(() => ({
     scope: options.scope,
@@ -97,7 +99,7 @@ export const useStaticNodeManager = (options: UseStaticNodeManagerOptions) => {
       await refresh();
     } catch (error) {
       toast.add({
-        title: "Error",
+        title: t("common.toast.errorTitle"),
         description: getErrorMessage(error),
         color: "error",
       });
@@ -134,10 +136,13 @@ export const useStaticNodeManager = (options: UseStaticNodeManagerOptions) => {
       });
       await refresh();
       closeEditDialog();
-      toast.add({ title: "Static node updated", color: "primary" });
+      toast.add({
+        title: t("adminSources.toasts.staticNodeUpdated"),
+        color: "primary",
+      });
     } catch (error) {
       toast.add({
-        title: "Error",
+        title: t("common.toast.errorTitle"),
         description: getErrorMessage(error),
         color: "error",
       });
@@ -164,7 +169,7 @@ export const useStaticNodeManager = (options: UseStaticNodeManagerOptions) => {
       deletingId.value = null;
     } catch (error) {
       toast.add({
-        title: "Error",
+        title: t("common.toast.errorTitle"),
         description: getErrorMessage(error),
         color: "error",
       });

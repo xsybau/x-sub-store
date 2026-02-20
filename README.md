@@ -12,6 +12,16 @@ X-SUB-Store is a Docker-first, secure V2Ray subscription aggregator and manageme
 - **Performance**: Caching, concurrent fetching, deduplication.
 - **Docker First**: Easy deployment with Nginx and SSL automation.
 
+## Internationalization (UI)
+
+- Supported UI locales: `en` (default), `fa`, `ru`, `zh`
+- Locale routing strategy: no URL prefixes (`/admin/...` stays unchanged)
+- Locale switchers are available on:
+  - admin layout sidebar
+  - admin login screen
+- Persian (`fa`) enables RTL direction with mirrored admin shell behavior.
+- Scope in this phase is UI text only; backend/API response messages are unchanged.
+
 ## Quick Start (Dev)
 
 1. Clone the repo.

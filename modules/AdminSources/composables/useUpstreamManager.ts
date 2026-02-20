@@ -1,3 +1,4 @@
+import { useI18n } from "vue-i18n";
 import type { FetchError } from "ofetch";
 import type {
   SourceScope,
@@ -22,24 +23,6 @@ interface UpstreamFormState {
   url: string;
 }
 
-const getErrorMessage = (error: unknown): string => {
-  if (typeof error !== "object" || !error) {
-    return "Unknown error";
-  }
-
-  const candidate = error as FetchError;
-  const message =
-    candidate.data && typeof candidate.data === "object"
-      ? (candidate.data as { message?: string }).message
-      : undefined;
-
-  if (message) {
-    return message;
-  }
-
-  return candidate.message || "Unknown error";
-};
-
 const getInitialUpstreamForm = (): UpstreamFormState => ({
   name: "",
   url: "",
@@ -47,6 +30,26 @@ const getInitialUpstreamForm = (): UpstreamFormState => ({
 
 export const useUpstreamManager = (options: UseUpstreamManagerOptions) => {
   const toast = useToast();
+  const { t } = useI18n();
+  const { locale } = useAppLocale();
+
+  const getErrorMessage = (error: unknown): string => {
+    if (typeof error !== "object" || !error) {
+      return t("common.errors.unknown");
+    }
+
+    const candidate = error as FetchError;
+    const message =
+      candidate.data && typeof candidate.data === "object"
+        ? (candidate.data as { message?: string }).message
+        : undefined;
+
+    if (message) {
+      return message;
+    }
+
+    return candidate.message || t("common.errors.unknown");
+  };
 
   const query = computed(() => ({
     scope: options.scope,
@@ -99,7 +102,7 @@ export const useUpstreamManager = (options: UseUpstreamManagerOptions) => {
       await refresh();
     } catch (error) {
       toast.add({
-        title: "Error",
+        title: t("common.toast.errorTitle"),
         description: getErrorMessage(error),
         color: "error",
       });
@@ -136,10 +139,13 @@ export const useUpstreamManager = (options: UseUpstreamManagerOptions) => {
       });
       await refresh();
       closeEditDialog();
-      toast.add({ title: "Upstream updated", color: "primary" });
+      toast.add({
+        title: t("adminSources.toasts.upstreamUpdated"),
+        color: "primary",
+      });
     } catch (error) {
       toast.add({
-        title: "Error",
+        title: t("common.toast.errorTitle"),
         description: getErrorMessage(error),
         color: "error",
       });
@@ -166,7 +172,7 @@ export const useUpstreamManager = (options: UseUpstreamManagerOptions) => {
       deletingId.value = null;
     } catch (error) {
       toast.add({
-        title: "Error",
+        title: t("common.toast.errorTitle"),
         description: getErrorMessage(error),
         color: "error",
       });
@@ -177,23 +183,26 @@ export const useUpstreamManager = (options: UseUpstreamManagerOptions) => {
 
   const copyUrl = async (url: string) => {
     await navigator.clipboard.writeText(url);
-    toast.add({ title: "URL copied", color: "primary" });
+    toast.add({ title: t("adminSources.toasts.urlCopied"), color: "primary" });
   };
 
   const copyError = async (error: string) => {
     await navigator.clipboard.writeText(error);
-    toast.add({ title: "Error copied", color: "primary" });
+    toast.add({
+      title: t("adminSources.toasts.errorCopied"),
+      color: "primary",
+    });
   };
 
   const formatDate = (value?: string | Date) => {
     if (!value) {
-      return "Never";
+      return t("adminSources.date.never");
     }
 
     try {
-      return new Date(value).toLocaleString();
+      return new Date(value).toLocaleString(locale.value);
     } catch {
-      return "Unknown";
+      return t("adminSources.date.unknown");
     }
   };
 
@@ -203,20 +212,24 @@ export const useUpstreamManager = (options: UseUpstreamManagerOptions) => {
       const response = await testUpstreamFetchApi({ url, upstreamId });
       if (response.success) {
         toast.add({
-          title: "Success",
-          description: `Fetched ${String(response.size ?? 0)} bytes in ${String(response.duration)}ms`,
+          title: t("adminSources.toasts.testFetchSuccessTitle"),
+          description: t("adminSources.toasts.testFetchSuccessDescription", {
+            size: String(response.size ?? 0),
+            duration: String(response.duration),
+          }),
           color: "success",
         });
       } else {
         toast.add({
-          title: "Failed",
-          description: response.error || "Unknown error",
+          title: t("adminSources.toasts.testFetchFailedTitle"),
+          description:
+            response.error || t("adminSources.toasts.testFetchFailedFallback"),
           color: "error",
         });
       }
     } catch (error) {
       toast.add({
-        title: "Error",
+        title: t("common.toast.errorTitle"),
         description: getErrorMessage(error),
         color: "error",
       });

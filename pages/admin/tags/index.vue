@@ -3,15 +3,17 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import TagsListScreen from "~/modules/AdminUsers/screens/TagsListScreen.vue";
 
+const { t } = useI18n();
+
 definePageMeta({
-  title: "Tags",
   layout: "admin",
   middleware: "auth",
 });
 
-useHead({
-  title: "Tags",
-});
+useHead(() => ({
+  title: t("pages.tags"),
+}));
 </script>

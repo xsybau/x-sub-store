@@ -6,45 +6,57 @@
       <div class="flex items-center gap-3">
         <h2 class="text-2xl font-bold">{{ tag.name }}</h2>
         <UBadge :color="tag.isDefault ? 'success' : 'neutral'" variant="subtle">
-          {{ tag.isDefault ? "Default" : "Optional" }}
+          {{
+            tag.isDefault
+              ? t("common.status.default")
+              : t("common.status.optional")
+          }}
         </UBadge>
       </div>
 
       <div class="flex gap-2">
-        <UButton variant="soft" :loading="savingTag" @click="saveTag"
-          >Save Tag</UButton
-        >
-        <UButton color="error" variant="soft" @click="deleteDialogOpen = true"
-          >Delete Tag</UButton
-        >
+        <UButton variant="soft" :loading="savingTag" @click="saveTag">
+          {{ t("adminUsers.tagDetails.saveTagButton") }}
+        </UButton>
+        <UButton color="error" variant="soft" @click="deleteDialogOpen = true">
+          {{ t("adminUsers.tagDetails.deleteTagButton") }}
+        </UButton>
       </div>
     </div>
 
     <UCard class="mb-8">
       <template #header>
-        <h3 class="text-lg font-bold">Tag Settings</h3>
+        <h3 class="text-lg font-bold">
+          {{ t("adminUsers.tagDetails.headings.tagSettings") }}
+        </h3>
       </template>
 
       <div class="space-y-4">
-        <UFormField label="Tag Name">
+        <UFormField :label="t('adminUsers.tagDetails.fields.tagName')">
           <UInput v-model="editState.name" required />
         </UFormField>
         <UCheckbox
           v-model="editState.isDefault"
-          label="Default for new users"
+          :label="t('adminUsers.tagDetails.fields.defaultForNewUsers')"
         />
       </div>
     </UCard>
 
     <UCard class="mb-8">
       <template #header>
-        <h3 class="text-lg font-bold">Users In This Tag</h3>
+        <h3 class="text-lg font-bold">
+          {{ t("adminUsers.tagDetails.headings.usersInThisTag") }}
+        </h3>
       </template>
 
       <UTable :data="users" :columns="userColumns" :loading="usersPending">
         <template #isActive-cell="{ row }">
           <UBadge :color="row.original.isActive ? 'success' : 'error'">
-            {{ row.original.isActive ? "Active" : "Inactive" }}
+            {{
+              row.original.isActive
+                ? t("common.status.active")
+                : t("common.status.inactive")
+            }}
           </UBadge>
         </template>
 
@@ -61,11 +73,13 @@
 
     <UCard class="mb-8">
       <template #header>
-        <h3 class="text-lg font-bold">Apply Tag To Existing Users</h3>
+        <h3 class="text-lg font-bold">
+          {{ t("adminUsers.tagDetails.headings.applyTagToExistingUsers") }}
+        </h3>
       </template>
 
       <div class="space-y-4">
-        <UFormField label="Select Users (Batch)">
+        <UFormField :label="t('adminUsers.tagDetails.fields.selectUsersBatch')">
           <UInputMenu
             v-model="selectedApplyUserIds"
             :items="allUserOptions"
@@ -73,11 +87,17 @@
             value-key="_id"
             :multiple="true"
             class="w-full"
-            placeholder="Select users to apply this tag"
+            :placeholder="
+              t('adminUsers.tagDetails.fields.selectUsersPlaceholder')
+            "
           />
           <p class="mt-1 text-xs text-muted">
-            Matching users: {{ allUsers.length }} | Selected:
-            {{ selectedApplyUserIds.length }}
+            {{
+              t("adminUsers.tagDetails.fields.matchingUsersSummary", {
+                total: allUsers.length,
+                selected: selectedApplyUserIds.length,
+              })
+            }}
           </p>
         </UFormField>
 
@@ -88,7 +108,7 @@
             :disabled="!selectedApplyUserIds.length || applyingAllUsers"
             @click="applyToSelectedUsers"
           >
-            Apply To Selected Users
+            {{ t("adminUsers.tagDetails.buttons.applyToSelectedUsers") }}
           </UButton>
           <UButton
             color="primary"
@@ -97,7 +117,7 @@
             :disabled="applyingSelectedUsers || !allUsers.length"
             @click="applyToAllUsers"
           >
-            Apply To All Existing Users
+            {{ t("adminUsers.tagDetails.buttons.applyToAllExistingUsers") }}
           </UButton>
         </div>
       </div>
@@ -105,7 +125,9 @@
 
     <UCard class="mb-8">
       <template #header>
-        <h3 class="text-lg font-bold">Bulk User Actions</h3>
+        <h3 class="text-lg font-bold">
+          {{ t("adminUsers.tagDetails.headings.bulkUserActions") }}
+        </h3>
       </template>
 
       <div class="flex flex-wrap gap-2">
@@ -114,7 +136,7 @@
           :loading="runningAction === 'DEACTIVATE_USERS'"
           @click="openActionDialog('DEACTIVATE_USERS')"
         >
-          Deactivate Users
+          {{ t("adminUsers.tagDetails.buttons.deactivateUsers") }}
         </UButton>
         <UButton
           color="warning"
@@ -122,14 +144,14 @@
           :loading="runningAction === 'ROTATE_TOKENS'"
           @click="openActionDialog('ROTATE_TOKENS')"
         >
-          Rotate Tokens
+          {{ t("adminUsers.tagDetails.buttons.rotateTokens") }}
         </UButton>
         <UButton
           color="error"
           :loading="runningAction === 'DELETE_USERS'"
           @click="openActionDialog('DELETE_USERS')"
         >
-          Delete Users
+          {{ t("adminUsers.tagDetails.buttons.deleteUsers") }}
         </UButton>
       </div>
     </UCard>
@@ -137,14 +159,18 @@
     <div class="grid grid-cols-1 gap-8">
       <UCard>
         <template #header>
-          <h3 class="text-lg font-bold">Tag Upstreams</h3>
+          <h3 class="text-lg font-bold">
+            {{ t("adminUsers.tagDetails.headings.tagUpstreams") }}
+          </h3>
         </template>
         <UpstreamManager scope="TAG" :tag-id="tag._id" />
       </UCard>
 
       <UCard>
         <template #header>
-          <h3 class="text-lg font-bold">Tag Static Nodes</h3>
+          <h3 class="text-lg font-bold">
+            {{ t("adminUsers.tagDetails.headings.tagStaticNodes") }}
+          </h3>
         </template>
         <StaticNodeManager scope="TAG" :tag-id="tag._id" />
       </UCard>
@@ -162,9 +188,9 @@
 
     <ConfirmDialog
       v-model:open="deleteDialogOpen"
-      title="Delete Tag"
-      description="Deleting this tag detaches all users and removes all tag-scoped sources."
-      confirm-label="Delete Tag"
+      :title="t('adminUsers.tagDetails.deleteDialog.title')"
+      :description="t('adminUsers.tagDetails.deleteDialog.description')"
+      :confirm-label="t('adminUsers.tagDetails.deleteDialog.confirmLabel')"
       confirm-color="error"
       :loading="deletingTag"
       @confirm="deleteTag"
@@ -173,6 +199,7 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import type { FetchError } from "ofetch";
 import ConfirmDialog from "~/components/ConfirmDialog.vue";
 import StaticNodeManager from "~/modules/AdminSources/components/StaticNodeManager.vue";
@@ -199,6 +226,7 @@ interface TagEditState {
 
 const route = useRoute();
 const toast = useToast();
+const { t } = useI18n();
 
 const requestHeaders = import.meta.server
   ? useRequestHeaders(["cookie"])
@@ -213,7 +241,10 @@ const { data: tag, refresh: refreshTag } = useAsyncData<TagItem | null>(
   () => `admin-tag-${tagId.value}`,
   async () => {
     if (!tagId.value) {
-      throw createError({ statusCode: 400, statusMessage: "Invalid tag id" });
+      throw createError({
+        statusCode: 400,
+        statusMessage: t("adminUsers.errors.invalidTagId"),
+      });
     }
 
     return getTagApi(tagId.value);
@@ -312,20 +343,28 @@ const runningAction = ref<TagBulkAction | null>(null);
 
 const deleteDialogOpen = ref(false);
 
-const userColumns = [
-  { accessorKey: "label", header: "User" },
-  { accessorKey: "email", header: "Email" },
-  { accessorKey: "isActive", header: "Status" },
-  { accessorKey: "actions", header: "Actions" },
-];
+const userColumns = computed(() => [
+  { accessorKey: "label", header: t("adminUsers.tagDetails.userTable.user") },
+  { accessorKey: "email", header: t("adminUsers.tagDetails.userTable.email") },
+  {
+    accessorKey: "isActive",
+    header: t("adminUsers.tagDetails.userTable.status"),
+  },
+  {
+    accessorKey: "actions",
+    header: t("adminUsers.tagDetails.userTable.actions"),
+  },
+]);
 
 useHead(() => ({
-  title: tag.value ? `${tag.value.name} - Tags` : "Tag Details",
+  title: tag.value
+    ? t("adminUsers.tagDetails.pageTitle.withName", { name: tag.value.name })
+    : t("adminUsers.tagDetails.pageTitle.fallback"),
 }));
 
 const getErrorMessage = (error: unknown): string => {
   if (typeof error !== "object" || !error) {
-    return "Unexpected error";
+    return t("common.errors.unexpected");
   }
 
   const candidate = error as FetchError;
@@ -334,7 +373,7 @@ const getErrorMessage = (error: unknown): string => {
       ? (candidate.data as { message?: string }).message
       : undefined;
 
-  return message || candidate.message || "Unexpected error";
+  return message || candidate.message || t("common.errors.unexpected");
 };
 
 const saveTag = async () => {
@@ -346,10 +385,13 @@ const saveTag = async () => {
   try {
     await updateTagApi(tag.value._id, savePayload.value);
     await refreshTag();
-    toast.add({ title: "Tag updated", color: "success" });
+    toast.add({
+      title: t("adminUsers.tagDetails.toasts.tagUpdated"),
+      color: "success",
+    });
   } catch (error) {
     toast.add({
-      title: "Error",
+      title: t("common.toast.errorTitle"),
       description: getErrorMessage(error),
       color: "error",
     });
@@ -365,32 +407,32 @@ const openActionDialog = (action: TagBulkAction) => {
 
 const actionDialogTitle = computed(() => {
   if (pendingAction.value === "DELETE_USERS") {
-    return "Delete Tagged Users";
+    return t("adminUsers.tagDetails.actionDialog.deleteUsers.title");
   }
   if (pendingAction.value === "DEACTIVATE_USERS") {
-    return "Deactivate Tagged Users";
+    return t("adminUsers.tagDetails.actionDialog.deactivateUsers.title");
   }
-  return "Rotate Tokens For Tagged Users";
+  return t("adminUsers.tagDetails.actionDialog.rotateTokens.title");
 });
 
 const actionDialogDescription = computed(() => {
   if (pendingAction.value === "DELETE_USERS") {
-    return "This permanently deletes users that contain this tag.";
+    return t("adminUsers.tagDetails.actionDialog.deleteUsers.description");
   }
   if (pendingAction.value === "DEACTIVATE_USERS") {
-    return "This deactivates users that contain this tag.";
+    return t("adminUsers.tagDetails.actionDialog.deactivateUsers.description");
   }
-  return "This rotates tokens for users that contain this tag.";
+  return t("adminUsers.tagDetails.actionDialog.rotateTokens.description");
 });
 
 const actionDialogConfirmLabel = computed(() => {
   if (pendingAction.value === "DELETE_USERS") {
-    return "Delete Users";
+    return t("adminUsers.tagDetails.actionDialog.deleteUsers.confirmLabel");
   }
   if (pendingAction.value === "DEACTIVATE_USERS") {
-    return "Deactivate Users";
+    return t("adminUsers.tagDetails.actionDialog.deactivateUsers.confirmLabel");
   }
-  return "Rotate Tokens";
+  return t("adminUsers.tagDetails.actionDialog.rotateTokens.confirmLabel");
 });
 
 const actionDialogColor = computed<"warning" | "error">(() => {
@@ -410,13 +452,16 @@ const runAction = async () => {
     pendingAction.value = null;
     await refreshUsers();
     toast.add({
-      title: "Action completed",
-      description: `Matched ${String(result.matchedUsers)} users, affected ${String(result.affectedUsers)}`,
+      title: t("adminUsers.tagDetails.toasts.actionCompleted"),
+      description: t("adminUsers.tagDetails.toasts.actionCompletedDetails", {
+        matchedUsers: String(result.matchedUsers),
+        affectedUsers: String(result.affectedUsers),
+      }),
       color: "success",
     });
   } catch (error) {
     toast.add({
-      title: "Action failed",
+      title: t("adminUsers.tagDetails.toasts.actionFailed"),
       description: getErrorMessage(error),
       color: "error",
     });
@@ -435,14 +480,18 @@ const deleteTag = async () => {
     const result = await deleteTagApi(tag.value._id);
     deleteDialogOpen.value = false;
     toast.add({
-      title: "Tag deleted",
-      description: `${String(result.detachedUsers)} users detached, ${String(result.deletedUpstreams)} upstreams removed, ${String(result.deletedStaticNodes)} static nodes removed`,
+      title: t("adminUsers.tagDetails.toasts.tagDeleted"),
+      description: t("adminUsers.tagsList.toasts.tagDeletedDetails", {
+        detachedUsers: String(result.detachedUsers),
+        deletedUpstreams: String(result.deletedUpstreams),
+        deletedStaticNodes: String(result.deletedStaticNodes),
+      }),
       color: "success",
     });
     await navigateTo("/admin/tags");
   } catch (error) {
     toast.add({
-      title: "Delete failed",
+      title: t("adminUsers.tagDetails.toasts.deleteFailed"),
       description: getErrorMessage(error),
       color: "error",
     });
@@ -465,13 +514,16 @@ const applyToSelectedUsers = async () => {
     selectedApplyUserIds.value = [];
     await Promise.all([refreshUsers(), refreshAllUsers()]);
     toast.add({
-      title: "Tag applied to selected users",
-      description: `Matched ${String(result.matchedUsers)} users, affected ${String(result.affectedUsers)}`,
+      title: t("adminUsers.tagDetails.toasts.tagAppliedToSelectedUsers"),
+      description: t("adminUsers.tagDetails.toasts.applyDetails", {
+        matchedUsers: String(result.matchedUsers),
+        affectedUsers: String(result.affectedUsers),
+      }),
       color: "success",
     });
   } catch (error) {
     toast.add({
-      title: "Apply failed",
+      title: t("adminUsers.tagDetails.toasts.applyFailed"),
       description: getErrorMessage(error),
       color: "error",
     });
@@ -492,13 +544,16 @@ const applyToAllUsers = async () => {
     });
     await Promise.all([refreshUsers(), refreshAllUsers()]);
     toast.add({
-      title: "Tag applied to all users",
-      description: `Matched ${String(result.matchedUsers)} users, affected ${String(result.affectedUsers)}`,
+      title: t("adminUsers.tagDetails.toasts.tagAppliedToAllUsers"),
+      description: t("adminUsers.tagDetails.toasts.applyDetails", {
+        matchedUsers: String(result.matchedUsers),
+        affectedUsers: String(result.affectedUsers),
+      }),
       color: "success",
     });
   } catch (error) {
     toast.add({
-      title: "Apply failed",
+      title: t("adminUsers.tagDetails.toasts.applyFailed"),
       description: getErrorMessage(error),
       color: "error",
     });

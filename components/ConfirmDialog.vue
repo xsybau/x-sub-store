@@ -12,14 +12,14 @@
 
         <div class="mt-6 flex justify-end gap-2">
           <UButton variant="ghost" :disabled="loading" @click="open = false">
-            {{ cancelLabel }}
+            {{ resolvedCancelLabel }}
           </UButton>
           <UButton
             :color="confirmColor"
             :loading="loading"
             @click="$emit('confirm')"
           >
-            {{ confirmLabel }}
+            {{ resolvedConfirmLabel }}
           </UButton>
         </div>
       </div>
@@ -28,7 +28,8 @@
 </template>
 
 <script setup lang="ts">
-withDefaults(
+import { useI18n } from "vue-i18n";
+const props = withDefaults(
   defineProps<{
     title: string;
     description: string;
@@ -45,8 +46,8 @@ withDefaults(
     loading?: boolean;
   }>(),
   {
-    confirmLabel: "Confirm",
-    cancelLabel: "Cancel",
+    confirmLabel: "",
+    cancelLabel: "",
     confirmColor: "error",
     loading: false,
   },
@@ -57,4 +58,13 @@ defineEmits<{
 }>();
 
 const open = defineModel<boolean>("open", { default: false });
+const { t } = useI18n();
+
+const resolvedConfirmLabel = computed(() => {
+  return props.confirmLabel || t("common.actions.confirm");
+});
+
+const resolvedCancelLabel = computed(() => {
+  return props.cancelLabel || t("common.actions.cancel");
+});
 </script>

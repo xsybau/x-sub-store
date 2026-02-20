@@ -3,15 +3,17 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import SettingsScreen from "~/modules/AdminSettings/screens/SettingsScreen.vue";
 
+const { t } = useI18n();
+
 definePageMeta({
-  title: "Global Settings",
   layout: "admin",
   middleware: "auth",
 });
 
-useHead({
-  title: "Global Settings",
-});
+useHead(() => ({
+  title: t("pages.adminSettings"),
+}));
 </script>

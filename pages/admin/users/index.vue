@@ -3,15 +3,17 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import UsersListScreen from "~/modules/AdminUsers/screens/UsersListScreen.vue";
 
+const { t } = useI18n();
+
 definePageMeta({
-  title: "Users",
   layout: "admin",
   middleware: "auth",
 });
 
-useHead({
-  title: "Users",
-});
+useHead(() => ({
+  title: t("pages.users"),
+}));
 </script>

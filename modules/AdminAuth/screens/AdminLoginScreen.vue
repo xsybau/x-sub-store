@@ -17,22 +17,34 @@
       >
         <template #header>
           <div class="space-y-3">
+            <div class="flex justify-end">
+              <UInputMenu
+                v-model="selectedLocale"
+                :items="localeOptions"
+                label-key="label"
+                value-key="value"
+                class="w-32"
+              />
+            </div>
+
             <div
               class="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-inverted"
             >
               <UIcon name="i-heroicons-shield-check" class="size-5" />
             </div>
             <div>
-              <h3 class="text-2xl font-bold text-highlighted">Welcome Back</h3>
+              <h3 class="text-2xl font-bold text-highlighted">
+                {{ t("adminAuth.login.welcomeBack") }}
+              </h3>
               <p class="mt-1 text-sm text-muted">
-                Sign in to continue to the admin dashboard.
+                {{ t("adminAuth.login.subtitle") }}
               </p>
             </div>
           </div>
         </template>
 
         <form class="space-y-5" @submit.prevent="handleLogin">
-          <UFormField label="Email" class="w-full">
+          <UFormField :label="t('adminAuth.login.emailLabel')" class="w-full">
             <UInput
               v-model="form.email"
               type="email"
@@ -43,7 +55,10 @@
             />
           </UFormField>
 
-          <UFormField label="Password" class="w-full">
+          <UFormField
+            :label="t('adminAuth.login.passwordLabel')"
+            class="w-full"
+          >
             <UInput
               v-model="form.password"
               type="password"
@@ -59,8 +74,9 @@
             size="xl"
             class="w-full justify-center"
             :loading="loading"
-            >Sign In</UButton
           >
+            {{ t("adminAuth.login.signIn") }}
+          </UButton>
         </form>
       </UCard>
     </div>
@@ -68,8 +84,19 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import type { FetchError } from "ofetch";
 import { useAdminAuth } from "~/modules/AdminAuth/composables/useAdminAuth";
+
+const { t } = useI18n();
+const { locale, setLocale, localeOptions } = useAppLocale();
+
+const selectedLocale = computed({
+  get: () => locale.value,
+  set: (value: unknown) => {
+    setLocale(value);
+  },
+});
 
 const form = ref({ email: "", password: "" });
 const loading = ref(false);
@@ -78,7 +105,7 @@ const { login } = useAdminAuth();
 
 const getErrorMessage = (error: unknown): string => {
   if (typeof error !== "object" || !error) {
-    return "Login failed";
+    return t("adminAuth.login.failed");
   }
 
   const candidate = error as FetchError;
@@ -87,7 +114,7 @@ const getErrorMessage = (error: unknown): string => {
       ? (candidate.data as { message?: string }).message
       : undefined;
 
-  return message || candidate.message || "Login failed";
+  return message || candidate.message || t("adminAuth.login.failed");
 };
 
 const handleLogin = async () => {
@@ -97,7 +124,7 @@ const handleLogin = async () => {
     await navigateTo("/admin/users");
   } catch (error) {
     toast.add({
-      title: "Error",
+      title: t("common.toast.errorTitle"),
       description: getErrorMessage(error),
       color: "error",
     });

@@ -1,8 +1,10 @@
 <template>
   <div>
     <div class="mb-4 flex items-center justify-between">
-      <h3 class="text-lg font-bold">Upstreams</h3>
-      <UButton size="sm" @click="createDialogOpen = true">Add Upstream</UButton>
+      <h3 class="text-lg font-bold">{{ t("adminSources.upstreams.title") }}</h3>
+      <UButton size="sm" @click="createDialogOpen = true">
+        {{ t("adminSources.upstreams.addButton") }}
+      </UButton>
     </div>
 
     <UTable
@@ -15,13 +17,7 @@
         <div class="min-w-0">
           <p class="truncate font-semibold">{{ row.original.name }}</p>
           <p class="truncate text-xs text-muted">
-            {{
-              row.original.scope === "USER"
-                ? "User scope"
-                : row.original.scope === "TAG"
-                  ? "Tag scope"
-                  : "Global scope"
-            }}
+            {{ getScopeLabel(row.original.scope) }}
           </p>
         </div>
       </template>
@@ -41,7 +37,7 @@
             color="neutral"
             variant="ghost"
             icon="i-heroicons-clipboard"
-            title="Copy URL"
+            :title="t('adminSources.upstreams.actions.copyUrl')"
             @click="copyUrl(row.original.url)"
           />
         </div>
@@ -53,7 +49,11 @@
             :color="row.original.lastFetchStatus === 200 ? 'success' : 'error'"
             variant="subtle"
           >
-            {{ row.original.lastFetchStatus === 200 ? "Healthy" : "Issue" }}
+            {{
+              row.original.lastFetchStatus === 200
+                ? t("common.status.healthy")
+                : t("common.status.issue")
+            }}
           </UBadge>
 
           <UTooltip
@@ -82,7 +82,7 @@
             size="xs"
             variant="ghost"
             icon="i-heroicons-bolt"
-            title="Test Fetch"
+            :title="t('adminSources.upstreams.actions.testFetch')"
             :loading="testingUpstreamId === row.original._id"
             @click="testFetch(row.original._id, row.original.url)"
           />
@@ -91,7 +91,7 @@
             variant="ghost"
             color="primary"
             icon="i-heroicons-pencil-square"
-            title="Edit Upstream"
+            :title="t('adminSources.upstreams.actions.editUpstream')"
             @click="openEditDialog(row.original)"
           />
           <UButton
@@ -107,24 +107,32 @@
 
     <UModal
       v-model:open="createDialogOpen"
-      title="Add Upstream"
-      description="Create a new upstream source for subscriptions."
+      :title="t('adminSources.upstreams.createModal.title')"
+      :description="t('adminSources.upstreams.createModal.description')"
     >
       <template #content>
         <div class="p-6">
-          <h3 class="mb-4 text-lg font-bold">Add Upstream</h3>
+          <h3 class="mb-4 text-lg font-bold">
+            {{ t("adminSources.upstreams.createModal.heading") }}
+          </h3>
           <form class="w-full space-y-4" @submit.prevent="createItem">
-            <UFormField class="w-full" label="Name">
+            <UFormField
+              class="w-full"
+              :label="t('adminSources.upstreams.fields.nameLabel')"
+            >
               <UInput v-model="newItem.name" class="w-full" required />
             </UFormField>
-            <UFormField class="w-full" label="URL">
+            <UFormField
+              class="w-full"
+              :label="t('adminSources.upstreams.fields.urlLabel')"
+            >
               <UTextarea
                 v-model="newItem.url"
                 class="w-full"
                 required
                 :rows="3"
                 autoresize
-                placeholder="https://example.com/sub/..."
+                :placeholder="t('adminSources.upstreams.fields.urlPlaceholder')"
               />
             </UFormField>
             <div class="flex justify-end space-x-2">
@@ -132,9 +140,12 @@
                 type="button"
                 variant="ghost"
                 @click="createDialogOpen = false"
-                >Cancel</UButton
               >
-              <UButton type="submit" :loading="creating">Add</UButton>
+                {{ t("common.actions.cancel") }}
+              </UButton>
+              <UButton type="submit" :loading="creating">
+                {{ t("common.actions.add") }}
+              </UButton>
             </div>
           </form>
         </div>
@@ -143,31 +154,41 @@
 
     <UModal
       v-model:open="editDialogOpen"
-      title="Edit Upstream"
-      description="Update upstream details for this source."
+      :title="t('adminSources.upstreams.editModal.title')"
+      :description="t('adminSources.upstreams.editModal.description')"
     >
       <template #content>
         <div class="p-6">
-          <h3 class="mb-4 text-lg font-bold">Edit Upstream</h3>
+          <h3 class="mb-4 text-lg font-bold">
+            {{ t("adminSources.upstreams.editModal.heading") }}
+          </h3>
           <form class="w-full space-y-4" @submit.prevent="updateItem">
-            <UFormField class="w-full" label="Name">
+            <UFormField
+              class="w-full"
+              :label="t('adminSources.upstreams.fields.nameLabel')"
+            >
               <UInput v-model="editItem.name" class="w-full" required />
             </UFormField>
-            <UFormField class="w-full" label="URL">
+            <UFormField
+              class="w-full"
+              :label="t('adminSources.upstreams.fields.urlLabel')"
+            >
               <UTextarea
                 v-model="editItem.url"
                 class="w-full"
                 required
                 :rows="3"
                 autoresize
-                placeholder="https://example.com/sub/..."
+                :placeholder="t('adminSources.upstreams.fields.urlPlaceholder')"
               />
             </UFormField>
             <div class="flex justify-end space-x-2">
-              <UButton type="button" variant="ghost" @click="closeEditDialog"
-                >Cancel</UButton
-              >
-              <UButton type="submit" :loading="updating">Save Changes</UButton>
+              <UButton type="button" variant="ghost" @click="closeEditDialog">
+                {{ t("common.actions.cancel") }}
+              </UButton>
+              <UButton type="submit" :loading="updating">
+                {{ t("common.actions.saveChanges") }}
+              </UButton>
             </div>
           </form>
         </div>
@@ -176,9 +197,9 @@
 
     <ConfirmDialog
       v-model:open="deleteDialogOpen"
-      title="Delete Upstream"
-      description="This upstream will be removed from subscriptions."
-      confirm-label="Delete Upstream"
+      :title="t('adminSources.upstreams.deleteDialog.title')"
+      :description="t('adminSources.upstreams.deleteDialog.description')"
+      :confirm-label="t('adminSources.upstreams.deleteDialog.confirmLabel')"
       confirm-color="error"
       :loading="deleting"
       @confirm="deleteItem"
@@ -187,6 +208,7 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import ConfirmDialog from "~/components/ConfirmDialog.vue";
 import { useUpstreamManager } from "~/modules/AdminSources/composables/useUpstreamManager";
 import type { SourceScope } from "~/modules/AdminSources/types/sources";
@@ -197,13 +219,36 @@ const props = defineProps<{
   tagId?: string;
 }>();
 
-const columns = [
-  { accessorKey: "name", header: "Name" },
-  { accessorKey: "url", header: "URL" },
-  { accessorKey: "status", header: "Last Status" },
-  { accessorKey: "checked", header: "Last Check" },
-  { accessorKey: "actions", header: "Actions" },
-];
+const { t } = useI18n();
+
+const columns = computed(() => [
+  { accessorKey: "name", header: t("adminSources.upstreams.columns.name") },
+  { accessorKey: "url", header: t("adminSources.upstreams.columns.url") },
+  {
+    accessorKey: "status",
+    header: t("adminSources.upstreams.columns.status"),
+  },
+  {
+    accessorKey: "checked",
+    header: t("adminSources.upstreams.columns.checked"),
+  },
+  {
+    accessorKey: "actions",
+    header: t("adminSources.upstreams.columns.actions"),
+  },
+]);
+
+const getScopeLabel = (scope: SourceScope): string => {
+  if (scope === "USER") {
+    return t("adminSources.upstreams.scope.user");
+  }
+
+  if (scope === "TAG") {
+    return t("adminSources.upstreams.scope.tag");
+  }
+
+  return t("adminSources.upstreams.scope.global");
+};
 
 const {
   upstreams,

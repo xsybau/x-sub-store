@@ -1,13 +1,16 @@
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
+
 definePageMeta({
-  title: "Admin",
   middleware: [
     function () {
       return navigateTo("/admin/users");
     },
   ],
 });
-useHead({
-  title: "Admin",
-});
+
+useHead(() => ({
+  title: t("pages.admin"),
+}));
 </script>

@@ -1,10 +1,12 @@
 <template>
   <div>
     <div class="mb-4 flex items-center justify-between">
-      <h3 class="text-lg font-bold">Static Nodes</h3>
-      <UButton size="sm" @click="createDialogOpen = true"
-        >Add Static Node</UButton
-      >
+      <h3 class="text-lg font-bold">
+        {{ t("adminSources.staticNodes.title") }}
+      </h3>
+      <UButton size="sm" @click="createDialogOpen = true">
+        {{ t("adminSources.staticNodes.addButton") }}
+      </UButton>
     </div>
 
     <UTable :data="nodes || []" :columns="columns" :loading="pending">
@@ -25,7 +27,7 @@
             variant="ghost"
             color="primary"
             icon="i-heroicons-pencil-square"
-            title="Edit Static Node"
+            :title="t('adminSources.staticNodes.actions.editStaticNode')"
             @click="openEditDialog(row.original)"
           />
           <UButton
@@ -41,23 +43,33 @@
 
     <UModal
       v-model:open="createDialogOpen"
-      title="Add Static Node"
-      description="Add a manual node URI that will be included in generated subscriptions."
+      :title="t('adminSources.staticNodes.createModal.title')"
+      :description="t('adminSources.staticNodes.createModal.description')"
     >
       <template #content>
         <div class="p-6">
-          <h3 class="mb-4 text-lg font-bold">Add Static Node</h3>
+          <h3 class="mb-4 text-lg font-bold">
+            {{ t("adminSources.staticNodes.createModal.heading") }}
+          </h3>
           <form class="w-full space-y-4" @submit.prevent="createItem">
-            <UFormField class="w-full" label="Name">
+            <UFormField
+              class="w-full"
+              :label="t('adminSources.staticNodes.fields.nameLabel')"
+            >
               <UInput v-model="newItem.name" class="w-full" required />
             </UFormField>
-            <UFormField class="w-full" label="Content (URI)">
+            <UFormField
+              class="w-full"
+              :label="t('adminSources.staticNodes.fields.contentLabel')"
+            >
               <UTextarea
                 v-model="newItem.content"
                 class="w-full"
                 required
                 :rows="4"
-                placeholder="vmess://..."
+                :placeholder="
+                  t('adminSources.staticNodes.fields.contentPlaceholder')
+                "
               />
             </UFormField>
             <div class="flex justify-end space-x-2">
@@ -65,9 +77,12 @@
                 type="button"
                 variant="ghost"
                 @click="createDialogOpen = false"
-                >Cancel</UButton
               >
-              <UButton type="submit" :loading="creating">Add</UButton>
+                {{ t("common.actions.cancel") }}
+              </UButton>
+              <UButton type="submit" :loading="creating">
+                {{ t("common.actions.add") }}
+              </UButton>
             </div>
           </form>
         </div>
@@ -76,30 +91,42 @@
 
     <UModal
       v-model:open="editDialogOpen"
-      title="Edit Static Node"
-      description="Update label or content for this static node."
+      :title="t('adminSources.staticNodes.editModal.title')"
+      :description="t('adminSources.staticNodes.editModal.description')"
     >
       <template #content>
         <div class="p-6">
-          <h3 class="mb-4 text-lg font-bold">Edit Static Node</h3>
+          <h3 class="mb-4 text-lg font-bold">
+            {{ t("adminSources.staticNodes.editModal.heading") }}
+          </h3>
           <form class="w-full space-y-4" @submit.prevent="updateItem">
-            <UFormField class="w-full" label="Name">
+            <UFormField
+              class="w-full"
+              :label="t('adminSources.staticNodes.fields.nameLabel')"
+            >
               <UInput v-model="editItem.name" class="w-full" required />
             </UFormField>
-            <UFormField class="w-full" label="Content (URI)">
+            <UFormField
+              class="w-full"
+              :label="t('adminSources.staticNodes.fields.contentLabel')"
+            >
               <UTextarea
                 v-model="editItem.content"
                 class="w-full"
                 required
                 :rows="4"
-                placeholder="vmess://..."
+                :placeholder="
+                  t('adminSources.staticNodes.fields.contentPlaceholder')
+                "
               />
             </UFormField>
             <div class="flex justify-end space-x-2">
-              <UButton type="button" variant="ghost" @click="closeEditDialog"
-                >Cancel</UButton
-              >
-              <UButton type="submit" :loading="updating">Save Changes</UButton>
+              <UButton type="button" variant="ghost" @click="closeEditDialog">
+                {{ t("common.actions.cancel") }}
+              </UButton>
+              <UButton type="submit" :loading="updating">
+                {{ t("common.actions.saveChanges") }}
+              </UButton>
             </div>
           </form>
         </div>
@@ -108,9 +135,9 @@
 
     <ConfirmDialog
       v-model:open="deleteDialogOpen"
-      title="Delete Static Node"
-      description="This static node will be permanently removed."
-      confirm-label="Delete Node"
+      :title="t('adminSources.staticNodes.deleteDialog.title')"
+      :description="t('adminSources.staticNodes.deleteDialog.description')"
+      :confirm-label="t('adminSources.staticNodes.deleteDialog.confirmLabel')"
       confirm-color="error"
       :loading="deleting"
       @confirm="deleteItem"
@@ -119,6 +146,7 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import ConfirmDialog from "~/components/ConfirmDialog.vue";
 import { useStaticNodeManager } from "~/modules/AdminSources/composables/useStaticNodeManager";
 import type { SourceScope } from "~/modules/AdminSources/types/sources";
@@ -129,11 +157,22 @@ const props = defineProps<{
   tagId?: string;
 }>();
 
-const columns = [
-  { accessorKey: "name", header: "Name" },
-  { accessorKey: "content", header: "Content" },
-  { accessorKey: "actions", header: "Actions" },
-];
+const { t } = useI18n();
+
+const columns = computed(() => [
+  {
+    accessorKey: "name",
+    header: t("adminSources.staticNodes.columns.name"),
+  },
+  {
+    accessorKey: "content",
+    header: t("adminSources.staticNodes.columns.content"),
+  },
+  {
+    accessorKey: "actions",
+    header: t("adminSources.staticNodes.columns.actions"),
+  },
+]);
 
 const {
   nodes,

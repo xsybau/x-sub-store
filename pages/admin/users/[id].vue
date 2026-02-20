@@ -6,7 +6,6 @@
 import UserDetailsScreen from "~/modules/AdminUsers/screens/UserDetailsScreen.vue";
 
 definePageMeta({
-  title: "Users",
   layout: "admin",
   middleware: "auth",
 });
