@@ -12,16 +12,6 @@ export interface NodeFingerprint {
   name?: string; // Extracted name
 }
 
-const asString = (value: unknown): string =>
-  typeof value === "string" ? value : "";
-
-const asStringOrNumber = (value: unknown): string => {
-  if (typeof value === "string" || typeof value === "number") {
-    return String(value);
-  }
-  return "";
-};
-
 export const parseNode = (uri: string): NodeFingerprint | null => {
   try {
     uri = uri.trim();
@@ -81,7 +71,9 @@ export const parseNode = (uri: string): NodeFingerprint | null => {
       if (!content.includes("@")) {
         try {
           content = Buffer.from(content, "base64").toString("utf-8");
-        } catch {}
+        } catch {
+          // Ignore invalid base64 and continue with original content.
+        }
       }
 
       const atIndex = content.lastIndexOf("@");
@@ -108,7 +100,7 @@ export const parseNode = (uri: string): NodeFingerprint | null => {
     // No, safer to just return null or minimal info.
 
     return null;
-  } catch (e) {
+  } catch {
     return null;
   }
 };
@@ -159,7 +151,9 @@ export const extractNodes = (content: string): string[] => {
       if (PROTOCOLS.some((p) => d.includes(p))) {
         decoded = d;
       }
-    } catch {}
+    } catch {
+      // Keep original content when decoding fails.
+    }
   }
 
   return decoded

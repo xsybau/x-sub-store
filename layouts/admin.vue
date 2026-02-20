@@ -1,6 +1,6 @@
 <template>
   <div
-    class="min-h-screen bg-gradient-to-br from-violet-50 via-white to-indigo-100 dark:from-gray-950 dark:via-gray-900 dark:to-violet-950"
+    class="min-h-screen bg-linear-to-br from-violet-50 via-white to-indigo-100 dark:from-gray-950 dark:via-gray-900 dark:to-violet-950"
   >
     <div class="flex min-h-screen">
       <div
