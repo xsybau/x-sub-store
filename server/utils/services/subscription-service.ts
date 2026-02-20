@@ -251,12 +251,7 @@ const resolveByToken = async (
 
   const cached = await CacheEntry.findOne({ userId: user._id });
   if (cached) {
-    if (input.ifNoneMatch && input.ifNoneMatch === cached.etag) {
-      return { kind: "not-modified" };
-    }
-
     return {
-      kind: "content",
       etag: cached.etag,
       contentBase64: cached.contentBase64,
     };
@@ -312,11 +307,7 @@ const resolveByToken = async (
     lastUsedAt: new Date(),
   });
 
-  return {
-    kind: "content",
-    etag,
-    contentBase64: resultBase64,
-  };
+  return { etag, contentBase64: resultBase64 };
 };
 
 export const subscriptionService = {

@@ -36,18 +36,12 @@ export interface PreviewResult {
 
 export interface ResolveByTokenInput {
   token: string;
-  ifNoneMatch?: string;
 }
 
-export type ResolveByTokenResult =
-  | {
-      kind: "not-modified";
-    }
-  | {
-      kind: "content";
-      etag: string;
-      contentBase64: string;
-    };
+export interface ResolveByTokenResult {
+  etag: string;
+  contentBase64: string;
+}
 
 export interface TestFetchResult {
   success: boolean;

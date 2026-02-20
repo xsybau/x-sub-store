@@ -7,8 +7,10 @@ import type {
   UserWithToken,
 } from "~/modules/AdminUsers/types/users";
 
-export const listUsersApi = async (): Promise<UserItem[]> => {
-  return $fetch("/api/admin/users");
+export const listUsersApi = async (
+  headers?: HeadersInit,
+): Promise<UserItem[]> => {
+  return $fetch("/api/admin/users", { headers });
 };
 
 export const createUserApi = async (

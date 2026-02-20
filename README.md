@@ -79,6 +79,8 @@ Access:
 - Login to Admin Panel.
 - Create users. Each user gets a unique Subscription URL.
 - Give this URL to the user for their V2Ray client (v2rayNG, V2Box, etc.).
+- Subscription output defaults to raw URL lines (`vless://`, `vmess://`, ...), which is compatible with clients like v2rayN and Nekoray.
+- Optional: append `?format=base64` to return classic base64-encoded subscription content.
 
 ### Managing Upstreams
 

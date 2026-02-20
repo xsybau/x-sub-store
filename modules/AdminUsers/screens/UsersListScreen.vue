@@ -174,12 +174,15 @@ const columns = [
   { accessorKey: "actions", header: "Actions" },
 ];
 
-const { data, status, refresh } = useAsyncData(
+const requestHeaders = import.meta.server
+  ? useRequestHeaders(["cookie"])
+  : undefined;
+
+const { data, status, refresh } = useAsyncData<UserItem[]>(
   "admin-users-list",
-  listUsersApi,
+  () => listUsersApi(requestHeaders),
   {
-    server: false,
-    default: () => [],
+    default: (): UserItem[] => [],
   },
 );
 
