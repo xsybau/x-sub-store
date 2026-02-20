@@ -97,7 +97,7 @@
       </aside>
 
       <main class="flex-1 min-w-0 overflow-x-hidden">
-        <div class="mx-auto max-w-6xl p-4 sm:p-8">
+        <div class="mx-auto max-w-7xl p-4 sm:p-8">
           <slot />
         </div>
       </main>
