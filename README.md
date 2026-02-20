@@ -30,6 +30,7 @@ A Docker-first, secure V2Ray subscription aggregator and management system.
 6. Access:
    - `https://localhost/admin` (through Nginx + local certs)
    - `http://localhost:3000/admin` (direct Nuxt dev server)
+   - `http://localhost/subs/<token>` (plain HTTP subscription endpoint for local clients)
 
 ## Local HTTPS (Deploy-Like)
 
@@ -52,6 +53,11 @@ bun dev
 Access:
 
 - `https://localhost/admin`
+
+Notes:
+- Local HTTPS certs in `nginx/cert-local` are development certs; desktop clients may reject them with `UntrustedRoot`.
+- For local subscription import, use `http://localhost/subs/<token>` or set `NUXT_PUBLIC_SUBSCRIPTION_BASE_URL=http://localhost` so the copied URL is HTTP.
+- In production, use a publicly trusted certificate and keep subscription URLs on HTTPS.
 
 ## Production Deployment
 

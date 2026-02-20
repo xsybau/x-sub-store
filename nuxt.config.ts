@@ -66,6 +66,12 @@ export default defineNuxtConfig({
     fetchTimeoutMs: 10000,
     fetchMaxBytes: 5 * 1024 * 1024, // 5MB
     cacheTtlSeconds: 300, // 5 minutes
+    public: {
+      subscriptionBaseUrl:
+        process.env.NUXT_PUBLIC_SUBSCRIPTION_BASE_URL ||
+        process.env.SUBSCRIPTION_BASE_URL ||
+        "",
+    },
   },
   nitro: {
     // Ensuring we can use node/bun runtime features
