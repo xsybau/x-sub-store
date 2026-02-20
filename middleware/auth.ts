@@ -1,25 +1,30 @@
+import type { AdminUser } from "~/modules/AdminAuth/types/auth";
+
 export default defineNuxtRouteMiddleware(async (to) => {
-  if (!to.path.startsWith('/admin')) {
+  if (!to.path.startsWith("/admin")) {
     return;
   }
 
-  const isLoginRoute = to.path === '/admin/login';
+  const isLoginRoute = to.path === "/admin/login";
 
-  // Server-side: only trust access token here.
-  // Refresh token is intentionally scoped to /refresh-token and cannot be read on /admin/*
-  // requests, so hard redirects on missing access token would break valid refresh sessions.
+  // Server-side gate: prevent protected admin pages from rendering for unauthenticated users.
   if (import.meta.server) {
     const event = useRequestEvent();
-    const authState = useState<any>('user', () => null);
+    const authState = useState<AdminUser | null>("admin-auth-user", () => null);
 
     if (event) {
-      const { getAdminUserFromAccessToken } = await import('~/server/utils/admin-auth');
+      const { getAdminUserFromAccessToken } =
+        await import("~/server/utils/admin-auth");
       const user = getAdminUserFromAccessToken(event);
       authState.value = user;
       const isAuthenticated = Boolean(user);
 
+      if (!isAuthenticated && !isLoginRoute) {
+        return navigateTo("/admin/login");
+      }
+
       if (isAuthenticated && isLoginRoute) {
-        return navigateTo('/admin/users');
+        return navigateTo("/admin/users");
       }
 
       return;
@@ -36,10 +41,10 @@ export default defineNuxtRouteMiddleware(async (to) => {
   }
 
   if (!user.value && !isLoginRoute) {
-    return navigateTo('/admin/login');
+    return navigateTo("/admin/login");
   }
 
   if (user.value && isLoginRoute) {
-    return navigateTo('/admin/users');
+    return navigateTo("/admin/users");
   }
 });

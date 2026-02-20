@@ -1,23 +1,8 @@
-import { User } from '~/server/models/User';
-import { UserToken } from '~/server/models/UserToken';
-import { decryptToken } from '~/server/utils/encryption';
+import { userService } from "~/server/utils/services/user-service";
+import { parseRouteParams } from "~/server/utils/validation/parse";
+import { userIdParamsSchema } from "~/server/utils/validation/schemas/users";
 
 export default defineEventHandler(async (event) => {
-    const id = getRouterParam(event, 'id');
-    const user = await User.findById(id);
-    if (!user) {
-        throw createError({ statusCode: 404, statusMessage: 'User not found' });
-    }
-
-    const tokenRecord = await UserToken.findOne({ userId: id, revokedAt: null });
-    let token = null;
-    if (tokenRecord) {
-        try {
-            token = decryptToken(tokenRecord.tokenCiphertext);
-        } catch (e) {
-            token = 'DECRYPTION_FAILED';
-        }
-    }
-
-    return { ...user.toObject(), token };
+  const params = parseRouteParams(event, userIdParamsSchema);
+  return userService.getWithToken(params.id);
 });

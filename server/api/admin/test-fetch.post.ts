@@ -1,25 +1,8 @@
-import { safeFetch } from '~/server/utils/fetcher';
+import { upstreamService } from "~/server/utils/services/upstream-service";
+import { parseBody } from "~/server/utils/validation/parse";
+import { testFetchBodySchema } from "~/server/utils/validation/schemas/upstreams";
 
 export default defineEventHandler(async (event) => {
-    const body = await readBody(event);
-    if (!body.url) throw createError({ statusCode: 400, statusMessage: 'URL required' });
-
-    const start = Date.now();
-    try {
-        const content = await safeFetch(body.url);
-        const duration = Date.now() - start;
-        return {
-            success: true,
-            status: 200,
-            duration,
-            size: content.length,
-            preview: content.substring(0, 200) + (content.length > 200 ? '...' : '')
-        };
-    } catch (e: any) {
-        return {
-            success: false,
-            error: e.message,
-            duration: Date.now() - start
-        };
-    }
+  const body = await parseBody(event, testFetchBodySchema);
+  return upstreamService.testFetch(body);
 });

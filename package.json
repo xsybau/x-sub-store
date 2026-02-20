@@ -6,8 +6,14 @@
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
+    "lint": "bun run lint:eslint && bun run lint:typecheck",
+    "lint:eslint": "bunx eslint . --cache --cache-location .eslintcache --cache-strategy content",
+    "lint:full": "bun run lint:eslint:full && bun run lint:typecheck",
+    "lint:eslint:full": "bunx eslint .",
+    "lint:typecheck": "bunx vue-tsc --noEmit --pretty false",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "test": "bun test"
   },
   "dependencies": {
     "@nuxt/ui": "^4.4.0",

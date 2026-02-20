@@ -1,22 +1,14 @@
-import { User } from '~/server/models/User';
-import { logAudit } from '~/server/utils/audit';
+import { requireActorAdminId } from "~/server/utils/services/types";
+import { userService } from "~/server/utils/services/user-service";
+import { parseBody, parseRouteParams } from "~/server/utils/validation/parse";
+import {
+  updateUserBodySchema,
+  userIdParamsSchema,
+} from "~/server/utils/validation/schemas/users";
 
 export default defineEventHandler(async (event) => {
-    const id = getRouterParam(event, 'id');
-    const body = await readBody(event);
-
-    const user = await User.findByIdAndUpdate(id, body, { new: true });
-    if (!user) {
-        throw createError({ statusCode: 404 });
-    }
-
-    await logAudit({
-        actorAdminId: event.context.user.id,
-        action: 'UPDATE_USER',
-        targetType: 'User',
-        targetId: id,
-        metadata: body
-    });
-
-    return user;
+  const actorAdminId = requireActorAdminId(event);
+  const params = parseRouteParams(event, userIdParamsSchema);
+  const body = await parseBody(event, updateUserBodySchema);
+  return userService.update(actorAdminId, params.id, body);
 });

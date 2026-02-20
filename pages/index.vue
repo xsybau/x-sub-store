@@ -1,12 +1,12 @@
 <script setup lang="ts">
 definePageMeta({
-  title: 'Home',
+  title: "Home",
   middleware: [
     function () {
-      return navigateTo('/admin');
-    }
-  ]
-})
+      return navigateTo("/admin");
+    },
+  ],
+});
 useHead({
   title: "Home",
 });

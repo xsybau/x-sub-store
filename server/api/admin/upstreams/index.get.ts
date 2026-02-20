@@ -1,14 +1,8 @@
-import { Upstream } from '~/server/models/Upstream';
+import { upstreamService } from "~/server/utils/services/upstream-service";
+import { parseQueryParams } from "~/server/utils/validation/parse";
+import { listUpstreamsQuerySchema } from "~/server/utils/validation/schemas/upstreams";
 
 export default defineEventHandler(async (event) => {
-    const query = getQuery(event);
-    const filter: any = {};
-    if (query.userId) {
-        filter.userId = query.userId;
-    }
-    if (query.scope) {
-        filter.scope = query.scope;
-    }
-
-    return await Upstream.find(filter).sort({ createdAt: -1 });
+  const query = parseQueryParams(event, listUpstreamsQuerySchema);
+  return upstreamService.list(query);
 });

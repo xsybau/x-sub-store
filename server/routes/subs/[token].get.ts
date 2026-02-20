@@ -1,3 +1,3 @@
-import handler from '../../api/subs/[token].get';
+import handler from "../../api/subs/[token].get";
 
 export default handler;

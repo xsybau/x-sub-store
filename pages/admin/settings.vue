@@ -2,7 +2,9 @@
   <div>
     <div class="mb-6">
       <h2 class="text-2xl font-bold">Global Settings</h2>
-      <p class="mt-1 text-sm text-muted">Manage upstream and static sources shared across all users.</p>
+      <p class="mt-1 text-sm text-muted">
+        Manage upstream and static sources shared across all users.
+      </p>
     </div>
 
     <div class="grid grid-cols-1 gap-8">
@@ -24,10 +26,12 @@
 </template>
 
 <script setup lang="ts">
+import SettingsScreen from "~/modules/AdminSettings/screens/SettingsScreen.vue";
+
 definePageMeta({
-  title: 'Global Settings',
-  layout: 'admin',
-  middleware: 'auth'
+  title: "Global Settings",
+  layout: "admin",
+  middleware: "auth",
 });
 useHead({
   title: "Global Settings",

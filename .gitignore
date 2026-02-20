@@ -2,9 +2,12 @@
 .output
 .data
 .nuxt
+.nuxt_root_backup
 .nitro
+.nitro_root_backup
 .cache
 dist
+.node_modules_root_backup
 
 # Node dependencies
 node_modules
@@ -13,6 +16,7 @@ cert-local/
 # Logs
 logs
 *.log
+.eslintcache
 
 # Misc
 .DS_Store

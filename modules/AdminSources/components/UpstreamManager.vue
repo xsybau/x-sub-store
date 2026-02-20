@@ -1,8 +1,8 @@
 <template>
   <div>
-    <div class="flex justify-between items-center mb-4">
+    <div class="mb-4 flex items-center justify-between">
       <h3 class="text-lg font-bold">Upstreams</h3>
-      <UButton size="sm" @click="isOpen = true">Add Upstream</UButton>
+      <UButton size="sm" @click="createDialogOpen = true">Add Upstream</UButton>
     </div>
 
     <UTable
@@ -14,20 +14,28 @@
       <template #name-cell="{ row }">
         <div class="min-w-0">
           <p class="truncate font-semibold">{{ row.original.name }}</p>
-          <p class="text-xs text-muted truncate">
-            {{ row.original.scope === "USER" ? "User scope" : "Global scope" }}
+          <p class="truncate text-xs text-muted">
+            {{
+              row.original.scope === "USER"
+                ? "User scope"
+                : row.original.scope === "TAG"
+                  ? "Tag scope"
+                  : "Global scope"
+            }}
           </p>
         </div>
       </template>
+
       <template #url-cell="{ row }">
-        <div class="flex items-center gap-2 min-w-0">
+        <div class="flex min-w-0 items-center gap-2">
           <UTooltip :text="row.original.url">
             <p
-              class="max-w-[13rem] truncate rounded border border-default/70 bg-muted/20 px-2 py-1 font-mono text-xs text-toned"
+              class="max-w-52 truncate rounded border border-default/70 bg-muted/20 px-2 py-1 font-mono text-xs text-toned"
             >
               {{ row.original.url }}
             </p>
           </UTooltip>
+
           <UButton
             size="xs"
             color="neutral"
@@ -38,6 +46,7 @@
           />
         </div>
       </template>
+
       <template #status-cell="{ row }">
         <div class="space-y-1">
           <UBadge
@@ -46,6 +55,7 @@
           >
             {{ row.original.lastFetchStatus === 200 ? "Healthy" : "Issue" }}
           </UBadge>
+
           <UTooltip
             v-if="row.original.lastError"
             :text="row.original.lastError"
@@ -59,49 +69,51 @@
           </UTooltip>
         </div>
       </template>
+
       <template #checked-cell="{ row }">
         <p class="text-xs text-muted">
           {{ formatDate(row.original.lastFetchAt) }}
         </p>
       </template>
+
       <template #actions-cell="{ row }">
         <div class="flex space-x-2">
           <UButton
-            @click="testFetch(row.original.url)"
             size="xs"
             variant="ghost"
             icon="i-heroicons-bolt"
             title="Test Fetch"
+            :loading="testingUpstreamId === row.original._id"
+            @click="testFetch(row.original._id, row.original.url)"
           />
           <UButton
-            @click="openEditDialog(row.original)"
             size="xs"
             variant="ghost"
             color="primary"
             icon="i-heroicons-pencil-square"
             title="Edit Upstream"
+            @click="openEditDialog(row.original)"
           />
           <UButton
-            @click="openDeleteDialog(row.original._id)"
             size="xs"
             variant="ghost"
             color="error"
             icon="i-heroicons-trash"
+            @click="openDeleteDialog(row.original._id)"
           />
         </div>
       </template>
     </UTable>
 
-    <!-- Add Modal -->
     <UModal
-      v-model:open="isOpen"
+      v-model:open="createDialogOpen"
       title="Add Upstream"
       description="Create a new upstream source for subscriptions."
     >
       <template #content>
         <div class="p-6">
-          <h3 class="text-lg font-bold mb-4">Add Upstream</h3>
-          <form @submit.prevent="createItem" class="space-y-4 w-full">
+          <h3 class="mb-4 text-lg font-bold">Add Upstream</h3>
+          <form class="w-full space-y-4" @submit.prevent="createItem">
             <UFormField class="w-full" label="Name">
               <UInput v-model="newItem.name" class="w-full" required />
             </UFormField>
@@ -116,7 +128,10 @@
               />
             </UFormField>
             <div class="flex justify-end space-x-2">
-              <UButton type="button" variant="ghost" @click="isOpen = false"
+              <UButton
+                type="button"
+                variant="ghost"
+                @click="createDialogOpen = false"
                 >Cancel</UButton
               >
               <UButton type="submit" :loading="creating">Add</UButton>
@@ -133,8 +148,8 @@
     >
       <template #content>
         <div class="p-6">
-          <h3 class="text-lg font-bold mb-4">Edit Upstream</h3>
-          <form @submit.prevent="updateItem" class="space-y-4 w-full">
+          <h3 class="mb-4 text-lg font-bold">Edit Upstream</h3>
+          <form class="w-full space-y-4" @submit.prevent="updateItem">
             <UFormField class="w-full" label="Name">
               <UInput v-model="editItem.name" class="w-full" required />
             </UFormField>
@@ -165,16 +180,21 @@
       description="This upstream will be removed from subscriptions."
       confirm-label="Delete Upstream"
       confirm-color="error"
-      :loading="deletingItem"
+      :loading="deleting"
       @confirm="deleteItem"
     />
   </div>
 </template>
 
 <script setup lang="ts">
+import ConfirmDialog from "~/components/ConfirmDialog.vue";
+import { useUpstreamManager } from "~/modules/AdminSources/composables/useUpstreamManager";
+import type { SourceScope } from "~/modules/AdminSources/types/sources";
+
 const props = defineProps<{
-  scope: "USER" | "GLOBAL";
+  scope: SourceScope;
   userId?: string;
+  tagId?: string;
 }>();
 
 const columns = [
@@ -186,143 +206,30 @@ const columns = [
 ];
 
 const {
-  data: upstreams,
-  refresh,
+  upstreams,
   pending,
-} = await useFetch("/api/admin/upstreams", {
-  query: { scope: props.scope, userId: props.userId },
+  createDialogOpen,
+  creating,
+  newItem,
+  createItem,
+  editDialogOpen,
+  updating,
+  editItem,
+  openEditDialog,
+  closeEditDialog,
+  updateItem,
+  deleteDialogOpen,
+  deleting,
+  openDeleteDialog,
+  deleteItem,
+  testFetch,
+  testingUpstreamId,
+  copyUrl,
+  copyError,
+  formatDate,
+} = useUpstreamManager({
+  scope: props.scope,
+  userId: props.userId,
+  tagId: props.tagId,
 });
-
-const isOpen = ref(false);
-const creating = ref(false);
-const newItem = ref({ name: "", url: "" });
-const editDialogOpen = ref(false);
-const updating = ref(false);
-const editingId = ref<string | null>(null);
-const editItem = ref({ name: "", url: "" });
-const deleteDialogOpen = ref(false);
-const deletingItem = ref(false);
-const deletingId = ref<string | null>(null);
-const toast = useToast();
-
-const copyUrl = async (url: string) => {
-  await navigator.clipboard.writeText(url);
-  toast.add({ title: "URL copied", color: "primary" });
-};
-
-const copyError = async (error: string) => {
-  await navigator.clipboard.writeText(error);
-  toast.add({ title: "Error copied", color: "primary" });
-};
-
-const formatDate = (value?: string | Date) => {
-  if (!value) return "Never";
-  try {
-    return new Date(value).toLocaleString();
-  } catch {
-    return "Unknown";
-  }
-};
-
-const createItem = async () => {
-  creating.value = true;
-  try {
-    await $fetch("/api/admin/upstreams", {
-      method: "POST",
-      body: {
-        ...newItem.value,
-        scope: props.scope,
-        userId: props.userId,
-      },
-    });
-    isOpen.value = false;
-    newItem.value = { name: "", url: "" };
-    refresh();
-  } catch (e: any) {
-    toast.add({ title: "Error", description: e.data?.message, color: "error" });
-  } finally {
-    creating.value = false;
-  }
-};
-
-const openEditDialog = (item: any) => {
-  editingId.value = item._id;
-  editItem.value = {
-    name: item.name || "",
-    url: item.url || "",
-  };
-  editDialogOpen.value = true;
-};
-
-const closeEditDialog = () => {
-  editDialogOpen.value = false;
-  editingId.value = null;
-};
-
-const updateItem = async () => {
-  if (!editingId.value) return;
-  updating.value = true;
-  try {
-    await $fetch(`/api/admin/upstreams/${editingId.value}`, {
-      method: "PUT",
-      body: {
-        name: editItem.value.name,
-        url: editItem.value.url,
-      },
-    });
-    refresh();
-    closeEditDialog();
-    toast.add({ title: "Upstream updated", color: "primary" });
-  } catch (e: any) {
-    toast.add({
-      title: "Error",
-      description: e.data?.message || e.message,
-      color: "error",
-    });
-  } finally {
-    updating.value = false;
-  }
-};
-
-const openDeleteDialog = (id: string) => {
-  deletingId.value = id;
-  deleteDialogOpen.value = true;
-};
-
-const deleteItem = async () => {
-  if (!deletingId.value) return;
-  deletingItem.value = true;
-  try {
-    await $fetch(`/api/admin/upstreams/${deletingId.value}`, {
-      method: "DELETE",
-    });
-    refresh();
-    deleteDialogOpen.value = false;
-    deletingId.value = null;
-  } catch (e: any) {
-    toast.add({ title: "Error", description: e.data?.message, color: "error" });
-  } finally {
-    deletingItem.value = false;
-  }
-};
-
-const testFetch = async (url: string) => {
-  try {
-    const res: any = await $fetch("/api/admin/test-fetch", {
-      method: "POST",
-      body: { url },
-    });
-    if (res.success) {
-      toast.add({
-        title: "Success",
-        description: `Fetched ${res.size} bytes in ${res.duration}ms`,
-        color: "success",
-      });
-    } else {
-      toast.add({ title: "Failed", description: res.error, color: "error" });
-    }
-  } catch (e: any) {
-    toast.add({ title: "Error", description: e.message, color: "error" });
-  }
-};
 </script>
