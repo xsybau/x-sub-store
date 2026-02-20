@@ -5,8 +5,9 @@ A Docker-first, secure V2Ray subscription aggregator and management system.
 ## Features
 
 - **Centralized Hub**: Merge multiple subscriptions (Hiddify, Xray, etc.) into one.
-- **Admin Panel**: Manage users, upstream sources, and static nodes.
+- **Admin Panel**: Manage users, tags, upstream sources, and static nodes.
 - **Tag-Aware Delivery**: Assign multiple tags per user, apply default tags for new users, and attach sources to tags.
+- **Operational UX**: Copy per-user subscription URLs from users list and run upstream test checks with live status updates.
 - **Secure**: Per-user secret tokens, no public signup, encrypted token storage.
 - **Performance**: Caching, concurrent fetching, deduplication.
 - **Docker First**: Easy deployment with Nginx and SSL automation.
@@ -86,6 +87,7 @@ Notes:
 - Login to Admin Panel.
 - Create users. Each user gets a unique Subscription URL.
 - Assign tags per user (multi-tag supported). Default tags are automatically applied to new users.
+- Use the users list "Copy Subscription URL" action to copy each user's final URL quickly.
 - Give this URL to the user for their V2Ray client (v2rayNG, V2Box, etc.).
 - Subscription output defaults to raw URL lines (`vless://`, `vmess://`, ...), which is compatible with clients like v2rayN and Nekoray.
 - Optional: append `?format=base64` to return classic base64-encoded subscription content.
@@ -96,6 +98,7 @@ Notes:
 - **User**: Applies to specific user only.
 - **Tag**: Applies to users that contain a specific tag.
 - Supports raw text lists or base64 subscription links.
+- "Test Fetch" updates upstream `Last Status` and `Last Check` fields after each check.
 
 ### Managing Tags
 - Create, edit, and delete tags from the Tags page.
@@ -115,11 +118,13 @@ Notes:
 
 - Run `bun install`
 - Run `bun dev` for local dev server (requires local Mongo).
+- Run `bun run lint` for ESLint + type-check (includes `nuxi prepare`).
+- Run `bun run lint:full` for a full ESLint pass without cache + type-check.
 - Run `bun test` for unit tests.
 
 ## Architecture
 
-- **Backend**: Nuxt 3 (Nitro)
+- **Backend**: Nuxt 4 (Nitro)
 - **Database**: MongoDB (Mongoose)
 - **Frontend**: Nuxt UI (Tailwind)
 - **Security**: Argon2 hashing, AES-256-GCM token encryption, H3 sessions.

@@ -9,7 +9,7 @@ Do not introduce quick hacks that break architecture.
 ## 2. Project Purpose
 
 `x-sub-store` is a Docker-first, secure V2Ray subscription hub.
-It lets admins manage users, upstream sources, and static nodes, then generate per-user subscription outputs.
+It lets admins manage users, tags, upstream sources, and static nodes, then generate per-user subscription outputs.
 Core goals:
 
 - Secure admin-only operations and token handling.
@@ -57,6 +57,8 @@ Reference route mapping style:
 
 - `pages/admin/users/index.vue` -> `modules/AdminUsers/screens/UsersListScreen.vue`
 - `pages/admin/users/[id].vue` -> `modules/AdminUsers/screens/UserDetailsScreen.vue`
+- `pages/admin/tags/index.vue` -> `modules/AdminUsers/screens/TagsListScreen.vue`
+- `pages/admin/tags/[id].vue` -> `modules/AdminUsers/screens/TagDetailsScreen.vue`
 - `pages/admin/settings.vue` -> `modules/AdminSettings/screens/SettingsScreen.vue`
 
 ## 6. DDD-Lite Rules
@@ -101,7 +103,8 @@ Reference route mapping style:
 1. Validate input at API boundaries.
 2. Keep response shapes stable for existing UI consumers.
 3. Prefer shared parsers/deduplication helpers from `server/utils/`.
-4. Avoid N+1 style DB access where practical.
+4. Current source scopes are `GLOBAL`, `USER`, and `TAG`; keep scope validation and behavior consistent.
+5. Avoid N+1 style DB access where practical.
 
 ## 11. Codex Working Rules
 
@@ -132,8 +135,11 @@ docker exec ss-app bun run build
 # Run tests
 docker exec ss-app bun test
 
-# Run ESLint (when lint config/scripts are present)
-docker exec ss-app bunx eslint .
+# Run lint + typecheck (prepare + eslint + vue-tsc)
+docker exec ss-app bun run lint
+
+# Run full lint (no eslint cache) + typecheck
+docker exec ss-app bun run lint:full
 ```
 
 ## 13. Change Checklist
