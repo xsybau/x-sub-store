@@ -105,6 +105,7 @@ const createWithToken = async (actorAdminId: string, input: CreateUserBody) => {
   const user = await User.create({
     label: input.label,
     email: input.email,
+    description: input.description,
     tagIds,
     isActive: true,
   });
@@ -158,6 +159,7 @@ const update = async (
   const updatePayload: {
     label?: string;
     email?: string;
+    description?: string;
     isActive?: boolean;
     tagIds?: string[];
   } = {};
@@ -167,6 +169,9 @@ const update = async (
   }
   if (input.email !== undefined) {
     updatePayload.email = input.email;
+  }
+  if (input.description !== undefined) {
+    updatePayload.description = input.description;
   }
   if (input.isActive !== undefined) {
     updatePayload.isActive = input.isActive;

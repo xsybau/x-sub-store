@@ -4,6 +4,7 @@ export const UserSchema = new Schema(
   {
     email: { type: String, index: true }, // Optional for users, just a label
     label: { type: String, required: true },
+    description: { type: String, default: "" },
     tagIds: {
       type: [{ type: Schema.Types.ObjectId, ref: "Tag" }],
       default: [],

@@ -29,6 +29,17 @@
         </div>
       </template>
 
+      <template #description-cell="{ row }">
+        <span v-if="!row.original.description" class="text-xs text-muted">
+          -
+        </span>
+        <UTooltip v-else :text="row.original.description">
+          <p class="max-w-56 truncate text-sm text-toned">
+            {{ row.original.description }}
+          </p>
+        </UTooltip>
+      </template>
+
       <template #actions-cell="{ row }">
         <div class="flex space-x-2">
           <UButton
@@ -75,7 +86,7 @@
     <UModal
       v-model:open="isCreateDialogOpen"
       title="Create User"
-      description="Add a new user with an optional email address."
+      description="Add a new user with optional email and admin-only notes."
     >
       <template #content>
         <div class="p-6">
@@ -86,6 +97,15 @@
             </UFormField>
             <UFormField label="Email" class="w-full">
               <UInput v-model="newUser.email" class="w-full" type="email" />
+            </UFormField>
+            <UFormField label="Description (Admin Only)" class="w-full">
+              <UTextarea
+                v-model="newUser.description"
+                class="w-full"
+                :rows="3"
+                :maxlength="500"
+                placeholder="Internal note for this user"
+              />
             </UFormField>
             <UFormField label="Tags" class="w-full">
               <UInputMenu
@@ -211,6 +231,7 @@ import {
 const columns = [
   { accessorKey: "label", header: "Name" },
   { accessorKey: "email", header: "Email" },
+  { accessorKey: "description", header: "Description" },
   { accessorKey: "tagIds", header: "Tags" },
   { accessorKey: "isActive", header: "Status" },
   { accessorKey: "actions", header: "Actions" },
@@ -247,7 +268,12 @@ const runtimeConfig = useRuntimeConfig();
 
 const isCreateDialogOpen = ref(false);
 const creating = ref(false);
-const newUser = ref<CreateUserInput>({ label: "", email: "", tagIds: [] });
+const newUser = ref<CreateUserInput>({
+  label: "",
+  email: "",
+  description: "",
+  tagIds: [],
+});
 
 const previewModalOpen = ref(false);
 const previewData = ref<UserSubscriptionPreview | null>(null);
@@ -360,7 +386,7 @@ const createUser = async () => {
   try {
     await createUserApi(newUser.value);
     isCreateDialogOpen.value = false;
-    newUser.value = { label: "", email: "", tagIds: [] };
+    newUser.value = { label: "", email: "", description: "", tagIds: [] };
     await refresh();
     toast.add({
       title: "User created",

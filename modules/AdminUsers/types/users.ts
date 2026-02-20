@@ -2,6 +2,7 @@ export interface UserItem {
   _id: string;
   label: string;
   email?: string;
+  description?: string;
   tagIds: string[];
   isActive: boolean;
 }
@@ -13,12 +14,14 @@ export interface UserWithToken extends UserItem {
 export interface CreateUserInput {
   label: string;
   email?: string;
+  description?: string;
   tagIds?: string[];
 }
 
 export interface UpdateUserInput {
   label?: string;
   email?: string;
+  description?: string;
   isActive?: boolean;
   tagIds?: string[];
 }

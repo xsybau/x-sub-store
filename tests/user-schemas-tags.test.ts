@@ -12,9 +12,11 @@ describe("User schemas with tags", () => {
     const parsed = createUserBodySchema.parse({
       label: "test-user",
       email: "test@example.com",
+      description: "Internal admin note",
       tagIds: [tagId],
     });
 
+    expect(parsed.description).toBe("Internal admin note");
     expect(parsed.tagIds).toEqual([tagId]);
   });
 
@@ -33,6 +35,14 @@ describe("User schemas with tags", () => {
     });
 
     expect(parsed.tagIds).toEqual([tagId]);
+  });
+
+  test("accepts update payload with description only", () => {
+    const parsed = updateUserBodySchema.parse({
+      description: "  Keep this user on premium nodes  ",
+    });
+
+    expect(parsed.description).toBe("Keep this user on premium nodes");
   });
 
   test("accepts list query with tagId", () => {

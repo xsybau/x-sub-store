@@ -33,6 +33,38 @@
 
     <UCard class="mb-8">
       <template #header>
+        <h3 class="text-lg font-bold">Admin Notes</h3>
+      </template>
+
+      <div class="space-y-3">
+        <UFormField label="Description (Admin Only)">
+          <UTextarea
+            v-model="editableDescription"
+            class="w-full"
+            :rows="4"
+            :maxlength="500"
+            placeholder="Internal notes for this user"
+          />
+        </UFormField>
+
+        <div class="flex items-center justify-between">
+          <p class="text-xs text-muted">
+            This note is visible only in admin user management screens.
+          </p>
+          <UButton
+            size="sm"
+            :loading="savingDescription"
+            :disabled="!isDescriptionDirty"
+            @click="saveDescription"
+          >
+            Save Description
+          </UButton>
+        </div>
+      </div>
+    </UCard>
+
+    <UCard class="mb-8">
+      <template #header>
         <h3 class="text-lg font-bold">User Tags</h3>
       </template>
 
@@ -366,7 +398,9 @@ const rotatingToken = ref(false);
 const togglingStatus = ref(false);
 const deletingUser = ref(false);
 const savingTags = ref(false);
+const savingDescription = ref(false);
 const editableTagIds = ref<string[]>([]);
+const editableDescription = ref("");
 const tagSaveError = ref<string | null>(null);
 const syncingTagSelection = ref(false);
 const queuedTagSave = ref(false);
@@ -393,10 +427,22 @@ watch(
   { immediate: true },
 );
 
+watch(
+  () => user.value?.description,
+  (description) => {
+    editableDescription.value = description || "";
+  },
+  { immediate: true },
+);
+
 const isTagSelectionDirty = computed(() => {
   const current = [...(user.value?.tagIds || [])].sort();
   const editable = [...editableTagIds.value].sort();
   return JSON.stringify(current) !== JSON.stringify(editable);
+});
+
+const isDescriptionDirty = computed(() => {
+  return (user.value?.description || "") !== editableDescription.value.trim();
 });
 
 const previewStatusColumns = [
@@ -522,6 +568,32 @@ const saveUserTags = async () => {
       queuedTagSave.value = false;
       triggerAutoSave();
     }
+  }
+};
+
+const saveDescription = async () => {
+  if (!user.value || !userId.value || !isDescriptionDirty.value) {
+    return;
+  }
+
+  savingDescription.value = true;
+  try {
+    await updateUserApi(userId.value, {
+      description: editableDescription.value.trim(),
+    });
+    await refresh();
+    toast.add({
+      title: "Description saved",
+      color: "success",
+    });
+  } catch (error) {
+    toast.add({
+      title: "Description update failed",
+      description: getErrorMessage(error),
+      color: "error",
+    });
+  } finally {
+    savingDescription.value = false;
   }
 };
 

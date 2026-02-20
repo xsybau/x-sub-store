@@ -23,6 +23,11 @@ const normalizedOptionalEmail = z
     return value;
   });
 
+const normalizedOptionalDescription = z.preprocess(
+  (value) => (typeof value === "string" ? value.trim() : value),
+  z.string().max(500),
+);
+
 export const userIdParamsSchema = z
   .object({
     id: z.string().trim().min(1),
@@ -33,6 +38,7 @@ export const createUserBodySchema = z
   .object({
     label: z.string().trim().min(1).max(120),
     email: normalizedOptionalEmail,
+    description: normalizedOptionalDescription.optional(),
     tagIds: tagIdsSchema.optional(),
   })
   .strict();
@@ -41,6 +47,7 @@ export const updateUserBodySchema = z
   .object({
     label: z.string().trim().min(1).max(120).optional(),
     email: normalizedOptionalEmail,
+    description: normalizedOptionalDescription.optional(),
     isActive: z.boolean().optional(),
     tagIds: tagIdsSchema.optional(),
   })
@@ -49,6 +56,7 @@ export const updateUserBodySchema = z
     (data) =>
       data.label !== undefined ||
       data.email !== undefined ||
+      data.description !== undefined ||
       data.isActive !== undefined ||
       data.tagIds !== undefined,
     {
