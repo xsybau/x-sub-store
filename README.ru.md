@@ -44,18 +44,15 @@ X-SUB-Store — безопасная система агрегирования �
    ```bash
    docker compose -f compose.dev.yml up -d
    ```
-4. Контейнер `ss-app` намеренно не запускает Nuxt dev автоматически.
-5. Запустите dev вручную внутри контейнера:
+4. Запустите Nuxt dev вручную внутри контейнера сервиса `app`:
    ```bash
-   docker exec -it ss-app ash
-   bun install
-   bun dev
+   docker compose -f compose.dev.yml exec app bun run dev --host 0.0.0.0 --port 3000
    ```
-6. Создайте администратора (в другом терминале):
+5. Создайте администратора (в другом терминале):
    ```bash
    docker compose -f compose.dev.yml exec app bun run scripts/create-admin.ts --email admin@example.com --password secret
    ```
-7. Доступ:
+6. Доступ:
    - `https://localhost/admin`
    - `http://localhost:3000/admin`
    - `http://localhost/subs/<token>`
@@ -66,19 +63,11 @@ X-SUB-Store — безопасная система агрегирования �
 docker compose -f compose.dev.yml up -d
 ```
 
-Запускаются сервисы `app`, `mongo`, `nginx` с локальными сертификатами из `nginx/cert-local`.
+Запускаются сервисы `traefik`, `app`, `mongo`.
 `DEV_DOMAIN` по умолчанию: `localhost`.
 
-Ручной запуск dev-сервера:
-
-```bash
-docker exec -it ss-app ash
-bun install
-bun dev
-```
-
 Примечания:
-- Локальные сертификаты могут отклоняться клиентами как `UntrustedRoot`.
+- Traefik автоматически выдает self-signed dev-сертификат для `https://localhost`; клиенты могут показывать `UntrustedRoot`.
 - Для локального импорта подписок используйте `http://localhost/subs/<token>` или задайте `NUXT_PUBLIC_SUBSCRIPTION_BASE_URL=http://localhost`.
 
 ## Продакшен-деплой
@@ -136,23 +125,23 @@ bun dev
 
 ## Разработка
 
-Рекомендуемый режим: выполнять команды в контейнере `ss-app`.
+Рекомендуемый режим: выполнять команды в контейнере сервиса `app`.
 
 - lint + typecheck:
   ```bash
-  docker exec ss-app bun run lint
+  docker compose -f compose.dev.yml exec app bun run lint
   ```
 - полный lint без кэша:
   ```bash
-  docker exec ss-app bun run lint:full
+  docker compose -f compose.dev.yml exec app bun run lint:full
   ```
 - build:
   ```bash
-  docker exec ss-app bun run build
+  docker compose -f compose.dev.yml exec app bun run build
   ```
 - тесты:
   ```bash
-  docker exec ss-app bun test
+  docker compose -f compose.dev.yml exec app bun test
   ```
 
 ## Архитектура

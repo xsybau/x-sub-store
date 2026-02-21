@@ -1,0 +1,6 @@
+tls:
+  options:
+    default:
+      minVersion: VersionTLS12
+      # Dev mode: allow Traefik's default self-signed cert for localhost.
+      sniStrict: false

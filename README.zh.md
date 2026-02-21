@@ -44,18 +44,15 @@ X-SUB-Store 是一个以 Docker 为核心、面向安全的 V2Ray 订阅聚合�
    ```bash
    docker compose -f compose.dev.yml up -d
    ```
-4. `ss-app` 容器默认不会自动运行 Nuxt dev。
-5. 在容器内手动安装依赖并启动开发服务：
+4. 在 `app` 服务容器内手动启动 Nuxt dev：
    ```bash
-   docker exec -it ss-app ash
-   bun install
-   bun dev
+   docker compose -f compose.dev.yml exec app bun run dev --host 0.0.0.0 --port 3000
    ```
-6. 创建管理员账号（在另一个终端）：
+5. 创建管理员账号（在另一个终端）：
    ```bash
    docker compose -f compose.dev.yml exec app bun run scripts/create-admin.ts --email admin@example.com --password secret
    ```
-7. 访问地址：
+6. 访问地址：
    - `https://localhost/admin`
    - `http://localhost:3000/admin`
    - `http://localhost/subs/<token>`
@@ -66,19 +63,11 @@ X-SUB-Store 是一个以 Docker 为核心、面向安全的 V2Ray 订阅聚合�
 docker compose -f compose.dev.yml up -d
 ```
 
-该模式会启动 `app`、`mongo`、`nginx`，并使用 `nginx/cert-local` 本地证书。
+该模式会启动 `traefik`、`app`、`mongo` 服务。
 `DEV_DOMAIN` 默认是 `localhost`。
 
-手动启动开发服务：
-
-```bash
-docker exec -it ss-app ash
-bun install
-bun dev
-```
-
 说明：
-- 本地证书可能被客户端视为 `UntrustedRoot`。
+- Traefik 会为 `https://localhost` 自动提供开发用 self-signed 证书，客户端可能提示 `UntrustedRoot`。
 - 本地导入订阅可使用 `http://localhost/subs/<token>`，或设置 `NUXT_PUBLIC_SUBSCRIPTION_BASE_URL=http://localhost`。
 
 ## 生产部署
@@ -136,23 +125,23 @@ bun dev
 
 ## 开发
 
-推荐在 `ss-app` 容器中执行：
+推荐在 `app` 服务容器中执行：
 
 - lint + typecheck:
   ```bash
-  docker exec ss-app bun run lint
+  docker compose -f compose.dev.yml exec app bun run lint
   ```
 - 完整 lint（不使用 ESLint 缓存）+ typecheck:
   ```bash
-  docker exec ss-app bun run lint:full
+  docker compose -f compose.dev.yml exec app bun run lint:full
   ```
 - build:
   ```bash
-  docker exec ss-app bun run build
+  docker compose -f compose.dev.yml exec app bun run build
   ```
 - 测试:
   ```bash
-  docker exec ss-app bun test
+  docker compose -f compose.dev.yml exec app bun test
   ```
 
 ## 架构

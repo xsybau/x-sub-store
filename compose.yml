@@ -101,7 +101,7 @@ services:
 
   mongo:
     container_name: ss-mongo-prod
-    image: mongo:6
+    image: mongo:8
     restart: unless-stopped
     volumes:
       - /tmp/x-sub-store/prod/mongo-data:/data/db

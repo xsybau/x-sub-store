@@ -1,19 +1,46 @@
-name: x-sub-store-dev
-
 services:
+  traefik:
+    image: traefik:v3
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - DOCKER_API_VERSION=${DOCKER_API_VERSION:-1.44}
+    command:
+      - --log.level=INFO
+      - --accesslog=true
+      - --api.dashboard=false
+      - --api.insecure=false
+      - --providers.docker=true
+      - --providers.docker.endpoint=unix:///var/run/docker.sock
+      - --providers.docker.exposedbydefault=false
+      - --providers.file.filename=/etc/traefik/dynamic-dev.yml
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --entrypoints.web.http.redirections.entrypoint.permanent=true
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./infra/traefik/dynamic-dev.yml:/etc/traefik/dynamic-dev.yml:ro
+    networks:
+      - v2ray-hub-dev-net
+
   app:
-    container_name: ss-app
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
-    image: x-sub-store-app:dev
+    image: oven/bun:1-alpine
     restart: unless-stopped
     env_file: .env
     stdin_open: true
     tty: true
+    working_dir: /app
+    command: ["sh", "-c", "while true; do sleep 3600; done"]
     depends_on:
       mongo:
         condition: service_healthy
+      traefik:
+        condition: service_started
     environment:
       - NODE_ENV=development
       - NITRO_PORT=3000
@@ -31,16 +58,21 @@ services:
       - "3000:3000"
     networks:
       - v2ray-hub-dev-net
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.xsubstore-dev.rule=Host(`${DEV_DOMAIN:-localhost}`)
+      - traefik.http.routers.xsubstore-dev.entrypoints=websecure
+      - traefik.http.routers.xsubstore-dev.tls=true
+      - traefik.http.services.xsubstore-dev.loadbalancer.server.port=3000
     volumes:
       - ./:/app
       - ./node_modules:/app/node_modules
-      - /tmp/x-sub-store/dev/.nuxt:/app/.nuxt
-      - /tmp/x-sub-store/dev/.nitro:/app/.nitro
-      - /tmp/x-sub-store/dev/bun-cache:/root/.bun/install/cache
+    tmpfs:
+      - /app/.nuxt
+      - /app/.nitro
 
   mongo:
-    container_name: ss-mongo
-    image: mongo:6
+    image: mongo:8
     restart: unless-stopped
     volumes:
       - /tmp/x-sub-store/dev/mongo-data:/data/db
@@ -48,29 +80,6 @@ services:
       - v2ray-hub-dev-net
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  nginx:
-    container_name: ss-nginx
-    image: nginx:alpine
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    env_file: .env
-    depends_on:
-      - app
-    environment:
-      - DOMAIN=${DEV_DOMAIN:-localhost}
-    networks:
-      - v2ray-hub-dev-net
-    volumes:
-      - ./nginx/templates-dev/default.conf.template:/etc/nginx/templates/default.conf.template:ro
-      - ./nginx/cert-local:/etc/nginx/cert-local:ro
-    healthcheck:
-      test: ["CMD-SHELL", "nginx -t -q || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3

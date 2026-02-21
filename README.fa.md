@@ -44,18 +44,15 @@ X-SUB-Store یک سامانه امن و Docker-first برای تجمیع و مد
    ```bash
    docker compose -f compose.dev.yml up -d
    ```
-4. کانتینر `ss-app` عمداً dev server را خودکار اجرا نمی‌کند.
-5. داخل کانتینر، وابستگی‌ها را نصب و dev server را دستی اجرا کنید:
+4. داخل کانتینر سرویس `app`، dev server را به‌صورت دستی اجرا کنید:
    ```bash
-   docker exec -it ss-app ash
-   bun install
-   bun dev
+   docker compose -f compose.dev.yml exec app bun run dev --host 0.0.0.0 --port 3000
    ```
-6. یک کاربر ادمین بسازید (در ترمینال جدا):
+5. یک کاربر ادمین بسازید (در ترمینال جدا):
    ```bash
    docker compose -f compose.dev.yml exec app bun run scripts/create-admin.ts --email admin@example.com --password secret
    ```
-7. دسترسی:
+6. دسترسی:
    - `https://localhost/admin`
    - `http://localhost:3000/admin`
    - `http://localhost/subs/<token>`
@@ -66,19 +63,11 @@ X-SUB-Store یک سامانه امن و Docker-first برای تجمیع و مد
 docker compose -f compose.dev.yml up -d
 ```
 
-این استک شامل سرویس‌های `app`، `mongo` و `nginx` است و از گواهی‌های محلی `nginx/cert-local` استفاده می‌کند.
+این استک شامل سرویس‌های `traefik`، `app` و `mongo` است.
 `DEV_DOMAIN` به‌صورت پیش‌فرض `localhost` است.
 
-برای اجرای dev server:
-
-```bash
-docker exec -it ss-app ash
-bun install
-bun dev
-```
-
 نکات:
-- گواهی‌های محلی ممکن است در برخی کلاینت‌ها با خطای `UntrustedRoot` رد شوند.
+- Traefik برای `https://localhost` به‌صورت خودکار گواهی self-signed توسعه ایجاد می‌کند و ممکن است در کلاینت‌ها با خطای `UntrustedRoot` دیده شود.
 - برای ایمپورت اشتراک محلی از `http://localhost/subs/<token>` استفاده کنید یا `NUXT_PUBLIC_SUBSCRIPTION_BASE_URL=http://localhost` بگذارید.
 
 ## استقرار Production
@@ -135,23 +124,23 @@ bun dev
 
 ## توسعه
 
-روال پیشنهادی، اجرای دستورات داخل کانتینر `ss-app` است:
+روال پیشنهادی، اجرای دستورات داخل کانتینر سرویس `app` است:
 
 - lint + typecheck:
   ```bash
-  docker exec ss-app bun run lint
+  docker compose -f compose.dev.yml exec app bun run lint
   ```
 - lint کامل بدون کش:
   ```bash
-  docker exec ss-app bun run lint:full
+  docker compose -f compose.dev.yml exec app bun run lint:full
   ```
 - build:
   ```bash
-  docker exec ss-app bun run build
+  docker compose -f compose.dev.yml exec app bun run build
   ```
 - test:
   ```bash
-  docker exec ss-app bun test
+  docker compose -f compose.dev.yml exec app bun test
   ```
 
 ## معماری

@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import { connectMongo } from "../utils/mongo-connection";
 
-export default defineNitroPlugin((_nitroApp) => {
+export default defineNitroPlugin(async (_nitroApp) => {
   const config = useRuntimeConfig();
   const mongoUri =
     config.mongoUri || process.env.MONGO_URI || process.env.MONGO_URL;
@@ -10,12 +10,10 @@ export default defineNitroPlugin((_nitroApp) => {
     return;
   }
 
-  void mongoose
-    .connect(mongoUri)
-    .then(() => {
-      console.log("Connected to MongoDB");
-    })
-    .catch((error: unknown) => {
-      console.error("MongoDB connection error:", error);
-    });
+  try {
+    await connectMongo(mongoUri);
+    console.log("Connected to MongoDB");
+  } catch (error: unknown) {
+    console.error("MongoDB connection error:", error);
+  }
 });

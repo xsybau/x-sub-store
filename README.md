@@ -41,19 +41,16 @@ X-SUB-Store is a Docker-first, secure V2Ray subscription aggregator and manageme
    ```bash
    docker compose -f compose.dev.yml up -d
    ```
-4. The `ss-app` container intentionally does not auto-run Nuxt dev.
-5. Install dependencies and run Nuxt dev manually inside the app container:
+4. Start Nuxt dev manually inside the running `app` service container:
    ```bash
-   docker exec -it ss-app ash
-   bun install
-   bun dev
+   docker compose -f compose.dev.yml exec app bun run dev --host 0.0.0.0 --port 3000
    ```
-6. Create an admin user (in another terminal):
+5. Create an admin user (in another terminal):
    ```bash
    docker compose -f compose.dev.yml exec app bun run scripts/create-admin.ts --email admin@example.com --password secret
    ```
-7. Access:
-   - `https://localhost/admin` (through Nginx + local certs)
+6. Access:
+   - `https://localhost/admin` (through Traefik + auto-generated self-signed cert)
    - `http://localhost:3000/admin` (direct Nuxt dev server)
    - `http://localhost/subs/<token>` (plain HTTP subscription endpoint for local clients)
 
@@ -65,20 +62,12 @@ Use the standalone dev stack:
 docker compose -f compose.dev.yml up -d
 ```
 
-This runs `app`, `mongo`, and `nginx` services with local certs from `nginx/cert-local`.
+This runs `traefik`, `app`, and `mongo` services.
 `DEV_DOMAIN` defaults to `localhost` (override if needed, e.g. `DEV_DOMAIN=api.localhost`).
-Nuxt source is mounted for hot reload. Dependency cache, Nuxt/Nitro cache, and MongoDB data are persisted in Docker volumes.
-
-Start dev server manually:
-
-```bash
-docker exec -it ss-app ash
-bun install
-bun dev
-```
+Nuxt source is mounted for hot reload, and MongoDB data is persisted for local development.
 
 Notes:
-- Local certs in `nginx/cert-local` are development certs; desktop clients may reject them with `UntrustedRoot`.
+- Traefik automatically serves a development self-signed TLS certificate for `https://localhost`; clients may show `UntrustedRoot`.
 - For local subscription import, use `http://localhost/subs/<token>` or set `NUXT_PUBLIC_SUBSCRIPTION_BASE_URL=http://localhost`.
 - In production, use a publicly trusted certificate and HTTPS URLs.
 
@@ -138,23 +127,23 @@ Notes:
 
 ## Development
 
-Preferred workflow uses the running app container.
+Preferred workflow uses the running `app` service container.
 
 - Lint + typecheck:
   ```bash
-  docker exec ss-app bun run lint
+  docker compose -f compose.dev.yml exec app bun run lint
   ```
 - Full lint (no ESLint cache) + typecheck:
   ```bash
-  docker exec ss-app bun run lint:full
+  docker compose -f compose.dev.yml exec app bun run lint:full
   ```
 - Build:
   ```bash
-  docker exec ss-app bun run build
+  docker compose -f compose.dev.yml exec app bun run build
   ```
 - Tests:
   ```bash
-  docker exec ss-app bun test
+  docker compose -f compose.dev.yml exec app bun test
   ```
 
 ## Architecture

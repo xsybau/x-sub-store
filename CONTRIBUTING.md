@@ -31,17 +31,14 @@ cp .env.example .env
 docker compose -f compose.dev.yml up -d
 ```
 
-4. Enter the app container and run Nuxt manually:
+4. Start Nuxt dev manually inside the running `app` service container:
 
 ```bash
-docker exec -it ss-app ash
-bun install
-bun dev
+docker compose -f compose.dev.yml exec app bun run dev --host 0.0.0.0 --port 3000
 ```
 
 Notes:
-- The dev container intentionally does not auto-run Nuxt.
-- App URL: `https://localhost/admin` (or `http://localhost:3000/admin` for direct dev access).
+- App URL: `https://localhost/admin` (Traefik self-signed TLS) or `http://localhost:3000/admin` for direct dev access.
 
 ## Project Structure Rules
 
@@ -81,18 +78,18 @@ Keep pages thin. Route files should orchestrate and delegate UI to module screen
 
 ## Quality Gates (Required Before PR)
 
-Run inside the app container:
+Run inside the `app` service container:
 
 ```bash
-docker exec ss-app bun run lint
-docker exec ss-app bun run build
-docker exec ss-app bun test
+docker compose -f compose.dev.yml exec app bun run lint
+docker compose -f compose.dev.yml exec app bun run build
+docker compose -f compose.dev.yml exec app bun test
 ```
 
 For full lint without cache:
 
 ```bash
-docker exec ss-app bun run lint:full
+docker compose -f compose.dev.yml exec app bun run lint:full
 ```
 
 ## Branches, Commits, and PRs
