@@ -33,6 +33,39 @@ X-SUB-Store is a Docker-first, secure V2Ray subscription aggregator and manageme
 - Root imports remain valid with compatibility aliases:
   - `~/modules/*`, `~/i18n/*`, `~/server/*`
 
+## One-Click Install (Production Server)
+
+Run:
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/xsybau/x-sub-store/main/install.sh)
+```
+
+This installer:
+- installs missing prerequisites (`git`, Docker) on Linux servers
+- clones/updates the repo in `/opt/x-sub-store` by default
+- runs interactive env setup and generates secure secrets
+- enforces production-required env values (including `CF_DNS_API_TOKEN`)
+- runs `docker compose down` and `docker compose up -d`
+- creates/updates admin user credentials
+- prints final admin URL and credentials
+
+Overrides:
+- `XSUB_REPO_URL` (default: `https://github.com/xsybau/x-sub-store.git`)
+- `XSUB_REF` (default: `main`)
+- `XSUB_INSTALL_DIR` (default: `/opt/x-sub-store`)
+
+Example override:
+
+```bash
+XSUB_REF=v1.0.0 XSUB_INSTALL_DIR=/srv/x-sub-store bash <(curl -fsSL https://raw.githubusercontent.com/xsybau/x-sub-store/main/install.sh)
+```
+
+Notes:
+- Linux only.
+- Requires root or a user with working `sudo`.
+- Installer does not modify host firewall rules; ensure ports `80` and `443` are open.
+
 ## Quick Start (Dev)
 
 1. Clone the repo.

@@ -19,7 +19,15 @@ This project is a secure, Docker-first V2Ray subscription hub built with:
 ## Local Setup
 
 1. Fork and clone the repository.
-2. Create your environment file:
+2. Optional server bootstrap (production one-click installer):
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/xsybau/x-sub-store/main/install.sh)
+```
+
+Supports overrides via `XSUB_REPO_URL`, `XSUB_REF`, and `XSUB_INSTALL_DIR`.
+
+3. Create your local development environment file:
 
 ```bash
 bun run env:setup
@@ -28,13 +36,13 @@ bun run env:setup
 The script prompts for required values, generates secure secrets, creates `.env`, and prints generated secrets.
 If Bun is unavailable on your host, use `cp .env.example .env` and edit values manually.
 
-3. Start the dev stack:
+4. Start the dev stack:
 
 ```bash
 docker compose -f compose.dev.yml up -d
 ```
 
-4. Start Nuxt dev manually inside the running `app` service container:
+5. Start Nuxt dev manually inside the running `app` service container:
 
 ```bash
 docker compose -f compose.dev.yml exec app bun run dev --host 0.0.0.0 --port 3000
