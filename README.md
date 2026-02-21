@@ -73,22 +73,39 @@ Notes:
 
 ## Production Deployment
 
-1. Set `DOMAIN` and `EMAIL` in `.env`.
+1. Set `DOMAIN`, `EMAIL`, and `APP_IMAGE` in `.env`.
 2. Initialize SSL certificates:
    ```bash
    chmod +x ops/ssl/init.sh
    ./ops/ssl/init.sh
    ```
-3. Build and start production stack:
+3. If your GHCR package is private, authenticate on server:
    ```bash
-   docker compose -f compose.yml up -d --build
+   echo "$GITHUB_TOKEN" | docker login ghcr.io -u <github-username> --password-stdin
    ```
-4. For normal restarts, do not rebuild:
+4. Pull the CI-built app image:
+   ```bash
+   docker compose -f compose.yml pull
+   ```
+5. Start production stack:
    ```bash
    docker compose -f compose.yml up -d
    ```
-5. MongoDB data is persisted in a named Docker volume.
-6. The app will be available at `https://your-domain.com`.
+6. Deploy updates with:
+   ```bash
+   docker compose -f compose.yml pull
+   docker compose -f compose.yml up -d
+   ```
+7. MongoDB data is persisted in a named Docker volume.
+8. The app will be available at `https://your-domain.com`.
+
+### CI Image Build
+
+- GitHub Actions workflow: `.github/workflows/build-image.yml`
+- Push to `main` or a `v*` tag builds and publishes image tags to GHCR:
+  - `ghcr.io/<owner>/<repo>:latest` (default branch)
+  - `ghcr.io/<owner>/<repo>:vX.Y.Z` (tags)
+  - `ghcr.io/<owner>/<repo>:sha-<commit>`
 
 ## Management
 

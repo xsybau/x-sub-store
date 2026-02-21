@@ -46,9 +46,7 @@ services:
 
   app:
     container_name: ss-app-prod
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ${APP_IMAGE:?ghcr.io/xsybau/x-sub-store:latest}
     restart: unless-stopped
     env_file: .env
     environment:
