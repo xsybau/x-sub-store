@@ -76,7 +76,11 @@ export default defineNuxtConfig({
       process.env.ADMIN_REFRESH_PUBLIC_KEY ||
       process.env.NUXT_ADMIN_REFRESH_PUBLIC_KEY ||
       "",
-    fetchTimeoutMs: 10000,
+    fetchTimeoutMs: Number(
+      process.env.FETCH_TIMEOUT_MS ||
+        process.env.NUXT_FETCH_TIMEOUT_MS ||
+        30000,
+    ),
     fetchMaxBytes: 5 * 1024 * 1024, // 5MB
     cacheTtlSeconds: 300, // 5 minutes
     public: {

@@ -26,7 +26,7 @@ export const safeFetch = async (url: string) => {
   }
 
   const config = useRuntimeConfig();
-  const timeout = config.fetchTimeoutMs || 10000;
+  const timeout = Number(config.fetchTimeoutMs) || 30000;
   const commonHeaders = {
     Accept: "text/plain,*/*;q=0.9",
   };

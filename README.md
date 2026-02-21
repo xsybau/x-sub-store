@@ -87,6 +87,10 @@ Notes:
    ```bash
    docker compose -f compose.dev.yml exec app bun run scripts/create-admin.ts --email admin@example.com --password secret
    ```
+   To reset admin email/password later:
+   ```bash
+   docker compose -f compose.dev.yml exec app bun run scripts/reset-admin.ts --new-email admin@example.com --new-password new-secret --current-email old-admin@example.com
+   ```
 6. Access:
    - `https://localhost/admin` (through Traefik + auto-generated self-signed cert)
    - `http://localhost:3000/admin` (direct Nuxt dev server)
