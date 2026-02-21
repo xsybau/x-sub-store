@@ -67,9 +67,8 @@ services:
     volumes:
       - ./:/app
       - ./node_modules:/app/node_modules
-    tmpfs:
-      - /app/.nuxt
-      - /app/.nitro
+      - ./.nuxt:/app/.nuxt
+      - ./.nitro:/app/.nitro
 
   mongo:
     image: mongo:8
