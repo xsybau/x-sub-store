@@ -22,8 +22,11 @@ This project is a secure, Docker-first V2Ray subscription hub built with:
 2. Create your environment file:
 
 ```bash
-cp .env.example .env
+bun run env:setup
 ```
+
+The script prompts for required values, generates secure secrets, creates `.env`, and prints generated secrets.
+If Bun is unavailable on your host, use `cp .env.example .env` and edit values manually.
 
 3. Start the dev stack:
 

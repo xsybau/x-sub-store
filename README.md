@@ -36,7 +36,12 @@ X-SUB-Store is a Docker-first, secure V2Ray subscription aggregator and manageme
 ## Quick Start (Dev)
 
 1. Clone the repo.
-2. `cp .env.example .env` and edit it.
+2. Create `.env` interactively:
+   ```bash
+   bun run env:setup
+   ```
+   This command asks for required values, generates secure secrets, writes `.env`, and prints generated secrets in the terminal.
+   If you do not have Bun on your host yet, use `cp .env.example .env` and edit values manually.
 3. Start the dev stack:
    ```bash
    docker compose -f compose.dev.yml up -d

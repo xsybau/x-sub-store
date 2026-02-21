@@ -5,6 +5,7 @@
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
+    "env:setup": "bun scripts/setup-env.ts",
     "generate": "nuxt generate",
     "lint:prepare": "bunx nuxi prepare",
     "lint": "bun run lint:eslint && bun run lint:typecheck",
