@@ -1,12 +1,54 @@
 name: x-sub-store-prod
 
 services:
+  traefik:
+    container_name: ss-traefik-prod
+    image: traefik:v3
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - CF_DNS_API_TOKEN=${CF_DNS_API_TOKEN:-}
+      - DOCKER_API_VERSION=${DOCKER_API_VERSION:-1.44}
+      - TRAEFIK_DNS_PROVIDER=${TRAEFIK_DNS_PROVIDER:-cloudflare}
+      - TRAEFIK_DNS_RESOLVERS=${TRAEFIK_DNS_RESOLVERS:-1.1.1.1:53,8.8.8.8:53}
+      - TRAEFIK_ACME_EMAIL=${TRAEFIK_ACME_EMAIL:-}
+      - LETSENCRYPT_CA_SERVER=${LETSENCRYPT_CA_SERVER:-https://acme-v02.api.letsencrypt.org/directory}
+    command:
+      - --log.level=INFO
+      - --accesslog=true
+      - --api.dashboard=false
+      - --api.insecure=false
+      - --providers.docker=true
+      - --providers.docker.endpoint=unix:///var/run/docker.sock
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=v2ray-hub-net
+      - --providers.file.filename=/etc/traefik/dynamic.yml
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --entrypoints.web.http.redirections.entrypoint.permanent=true
+      - --certificatesresolvers.letsencrypt.acme.email=${TRAEFIK_ACME_EMAIL:-}
+      - --certificatesresolvers.letsencrypt.acme.storage=/var/traefik/acme/acme.json
+      - --certificatesresolvers.letsencrypt.acme.caserver=${LETSENCRYPT_CA_SERVER:-https://acme-v02.api.letsencrypt.org/directory}
+      - --certificatesresolvers.letsencrypt.acme.dnschallenge=true
+      - --certificatesresolvers.letsencrypt.acme.dnschallenge.provider=${TRAEFIK_DNS_PROVIDER:-cloudflare}
+      - --certificatesresolvers.letsencrypt.acme.dnschallenge.resolvers=${TRAEFIK_DNS_RESOLVERS:-1.1.1.1:53,8.8.8.8:53}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./infra/traefik/acme:/var/traefik/acme
+      - ./infra/traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
+    networks:
+      - v2ray-hub-net
+
   app:
     container_name: ss-app-prod
     build:
       context: .
       dockerfile: Dockerfile
-    image: x-sub-store-app:prod
     restart: unless-stopped
     env_file: .env
     environment:
@@ -28,8 +70,28 @@ services:
     depends_on:
       mongo:
         condition: service_healthy
+      traefik:
+        condition: service_started
     networks:
       - v2ray-hub-net
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=v2ray-hub-net
+      - traefik.http.routers.xsubstore.rule=Host(`${TRAEFIK_APP_HOST:-app.example.com}`)
+      - traefik.http.routers.xsubstore.entrypoints=websecure
+      - traefik.http.routers.xsubstore.tls=true
+      - traefik.http.routers.xsubstore.tls.certresolver=letsencrypt
+      - traefik.http.routers.xsubstore.tls.domains[0].main=${TRAEFIK_CERT_MAIN_DOMAIN:-example.com}
+      - traefik.http.routers.xsubstore.tls.domains[0].sans=${TRAEFIK_CERT_SANS:-*.example.com}
+      - traefik.http.routers.xsubstore.middlewares=secure-headers
+      - traefik.http.services.xsubstore.loadbalancer.server.port=3000
+      - traefik.http.middlewares.secure-headers.headers.contentTypeNosniff=true
+      - traefik.http.middlewares.secure-headers.headers.browserXssFilter=true
+      - traefik.http.middlewares.secure-headers.headers.frameDeny=true
+      - traefik.http.middlewares.secure-headers.headers.referrerPolicy=no-referrer
+      - traefik.http.middlewares.secure-headers.headers.stsSeconds=31536000
+      - traefik.http.middlewares.secure-headers.headers.stsIncludeSubdomains=true
+      - traefik.http.middlewares.secure-headers.headers.stsPreload=true
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/api/health || exit 1"]
       interval: 30s
@@ -51,37 +113,6 @@ services:
       timeout: 10s
       retries: 3
 
-  nginx:
-    container_name: ss-nginx-prod
-    image: nginx:alpine
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/templates:/etc/nginx/templates
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
-    env_file: .env
-    depends_on:
-      app:
-        condition: service_healthy
-    networks:
-      - v2ray-hub-net
-    healthcheck:
-      test: ["CMD-SHELL", "nginx -t -q || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  certbot:
-    container_name: ss-certbot-prod
-    image: certbot/certbot
-    volumes:
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
-    networks:
-      - v2ray-hub-net
-
 networks:
   v2ray-hub-net:
+    name: v2ray-hub-net
