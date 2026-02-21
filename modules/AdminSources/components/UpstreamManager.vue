@@ -209,7 +209,7 @@
 
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
-import ConfirmDialog from "~/components/ConfirmDialog.vue";
+import ConfirmDialog from "~/app/components/ConfirmDialog.vue";
 import { useUpstreamManager } from "~/modules/AdminSources/composables/useUpstreamManager";
 import type { SourceScope } from "~/modules/AdminSources/types/sources";
 

@@ -27,12 +27,12 @@ export default withNuxt([
             // 1. Dumb UI Rule
             // Global UI cannot depend on feature modules or stores
             {
-              target: "./components/**",
+              target: "./app/components/**",
               from: "./modules/**",
               message: "Dumb UI components cannot depend on Modules",
             },
             {
-              target: "./components/**",
+              target: "./app/components/**",
               from: "./stores/**",
               message: "Dumb UI components cannot depend on Stores",
             },
@@ -65,62 +65,62 @@ export default withNuxt([
             },
             // 4. Thin Pages Rule
             {
-              target: "./pages/**",
-              from: "./components/**",
+              target: "./app/pages/**",
+              from: "./app/components/**",
               message: "Pages should only import from modules/*/screens.",
             },
             {
-              target: "./pages/**",
-              from: "./composables/**",
+              target: "./app/pages/**",
+              from: "./app/composables/**",
               message: "Pages should only import from modules/*/screens.",
             },
             {
-              target: "./pages/**",
+              target: "./app/pages/**",
               from: "./stores/**",
               message: "Pages should only import from modules/*/screens.",
             },
             {
-              target: "./pages/**",
+              target: "./app/pages/**",
               from: "./utils/**",
               message: "Pages should only import from modules/*/screens.",
             },
             {
-              target: "./pages/**",
-              from: "./layouts/**",
+              target: "./app/pages/**",
+              from: "./app/layouts/**",
               message: "Pages should only import from modules/*/screens.",
             },
             {
-              target: "./pages/**",
-              from: "./plugins/**",
+              target: "./app/pages/**",
+              from: "./app/plugins/**",
               message: "Pages should only import from modules/*/screens.",
             },
             {
-              target: "./pages/**",
-              from: "./middleware/**",
+              target: "./app/pages/**",
+              from: "./app/middleware/**",
               message: "Pages should only import from modules/*/screens.",
             },
             {
-              target: "./pages/**",
-              from: "./assets/**",
+              target: "./app/pages/**",
+              from: "./app/assets/**",
               message: "Pages should only import from modules/*/screens.",
             },
             {
-              target: "./pages/**",
+              target: "./app/pages/**",
               from: "./modules/*/components/**",
               message: "Pages should only import from modules/*/screens.",
             },
             {
-              target: "./pages/**",
+              target: "./app/pages/**",
               from: "./modules/*/composables/**",
               message: "Pages should only import from modules/*/screens.",
             },
             {
-              target: "./pages/**",
+              target: "./app/pages/**",
               from: "./modules/*/stores/**",
               message: "Pages should only import from modules/*/screens.",
             },
             {
-              target: "./pages/**",
+              target: "./app/pages/**",
               from: "./modules/*/utils/**",
               message: "Pages should only import from modules/*/screens.",
             },
@@ -131,7 +131,7 @@ export default withNuxt([
   },
   // Overrides for Pages -> axios
   {
-    files: ["pages/**/*.{js,ts,vue}"],
+    files: ["app/pages/**/*.{js,ts,vue}"],
     rules: {
       "no-restricted-imports": [
         "error",

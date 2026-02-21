@@ -82,7 +82,7 @@
 
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
-import ConfirmDialog from "~/components/ConfirmDialog.vue";
+import ConfirmDialog from "~/app/components/ConfirmDialog.vue";
 import StaticNodeManager from "~/modules/AdminSources/components/StaticNodeManager.vue";
 import UpstreamManager from "~/modules/AdminSources/components/UpstreamManager.vue";
 import UserDescriptionCard from "~/modules/AdminUsers/components/UserDescriptionCard.vue";

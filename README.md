@@ -22,6 +22,14 @@ X-SUB-Store is a Docker-first, secure V2Ray subscription aggregator and manageme
 - Persian (`fa`) enables RTL direction with mirrored admin shell behavior.
 - Scope in this phase is UI text only; backend/API response messages are unchanged.
 
+## Nuxt 4 App Directory Layout
+
+- App-facing Nuxt folders live under `app/`:
+  - `app/pages`, `app/layouts`, `app/components`, `app/composables`, `app/middleware`, `app/plugins`, `app/assets`
+- Domain/backend boundaries remain at repository root:
+  - `modules/`, `i18n/`, `server/`, `scripts/`, `tests/`, `public/`
+- This repository uses Nuxt 4 app-directory mode with compatibility aliases, so existing `~/modules/*`, `~/i18n/*`, and `~/server/*` imports remain valid.
+
 ## Quick Start (Dev)
 
 1. Clone the repo.

@@ -147,7 +147,7 @@
 
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
-import ConfirmDialog from "~/components/ConfirmDialog.vue";
+import ConfirmDialog from "~/app/components/ConfirmDialog.vue";
 import { useStaticNodeManager } from "~/modules/AdminSources/composables/useStaticNodeManager";
 import type { SourceScope } from "~/modules/AdminSources/types/sources";
 

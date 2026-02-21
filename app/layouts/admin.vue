@@ -31,8 +31,8 @@
 
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
-import AdminMobileMenuToggle from "~/components/admin/AdminMobileMenuToggle.vue";
-import AdminSidebar from "~/components/admin/AdminSidebar.vue";
+import AdminMobileMenuToggle from "~/app/components/admin/AdminMobileMenuToggle.vue";
+import AdminSidebar from "~/app/components/admin/AdminSidebar.vue";
 
 interface AdminNavLink {
   label: string;

@@ -1,9 +1,24 @@
+import { fileURLToPath } from "node:url";
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
+const projectRoot = fileURLToPath(new URL("./", import.meta.url));
+const serverRoot = fileURLToPath(new URL("./server", import.meta.url));
+const publicRoot = fileURLToPath(new URL("./public", import.meta.url));
+
 export default defineNuxtConfig({
+  srcDir: "app",
+  alias: {
+    "~": projectRoot,
+    "@": projectRoot,
+  },
+  serverDir: serverRoot,
+  dir: {
+    public: publicRoot,
+  },
   compatibilityDate: "2024-04-03",
   devtools: { enabled: process.env.NUXT_DEVTOOLS === "true" },
   modules: ["@nuxt/ui", "@nuxt/eslint"],
-  css: ["~/assets/css/main.css"],
+  css: ["~/app/assets/css/main.css"],
   app: {
     head: {
       titleTemplate: (titleChunk?: string) =>

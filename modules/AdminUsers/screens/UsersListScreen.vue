@@ -50,7 +50,7 @@
 
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
-import ConfirmDialog from "~/components/ConfirmDialog.vue";
+import ConfirmDialog from "~/app/components/ConfirmDialog.vue";
 import ListScreenHeader from "~/modules/AdminUsers/components/ListScreenHeader.vue";
 import UsersCreateModal from "~/modules/AdminUsers/components/UsersCreateModal.vue";
 import UsersListTable from "~/modules/AdminUsers/components/UsersListTable.vue";

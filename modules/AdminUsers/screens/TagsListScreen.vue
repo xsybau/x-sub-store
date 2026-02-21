@@ -44,7 +44,7 @@
 
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
-import ConfirmDialog from "~/components/ConfirmDialog.vue";
+import ConfirmDialog from "~/app/components/ConfirmDialog.vue";
 import ListScreenHeader from "~/modules/AdminUsers/components/ListScreenHeader.vue";
 import TagCreateModal from "~/modules/AdminUsers/components/TagCreateModal.vue";
 import TagEditModal from "~/modules/AdminUsers/components/TagEditModal.vue";

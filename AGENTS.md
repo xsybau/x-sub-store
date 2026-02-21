@@ -29,13 +29,15 @@ Rule: Nuxt UI is the official component system. Do not introduce Vuetify.
 
 ## 4. Required Folder Structure (Do Not Restructure)
 
-- `pages/` -> Route entrypoints and page-level orchestration.
-- `layouts/` -> Layout shells (admin shell, shared chrome).
-- `components/` -> Reusable presentational/feature UI components.
-- `composables/` -> Shared UI logic and reusable client-side behaviors.
+- `app/pages/` -> Route entrypoints and page-level orchestration.
+- `app/layouts/` -> Layout shells (admin shell, shared chrome).
+- `app/components/` -> Reusable presentational/feature UI components.
+- `app/composables/` -> Shared UI logic and reusable client-side behaviors.
 - `modules/{Domain}/` -> Feature/domain modules for new work.
   Expected inner structure: `screens/`, `components/`, `composables/`, `stores/`, `utils/`, `types/`.
-- `middleware/` -> Nuxt route middleware.
+- `app/middleware/` -> Nuxt route middleware.
+- `app/plugins/` -> Client/app-level plugins (e.g., i18n setup).
+- `app/assets/` -> App-level styles/fonts and static imported assets.
 - `server/api/` -> Nitro API handlers (application layer).
 - `server/routes/` -> Additional server routes.
 - `server/models/` -> Domain entities and persistence schemas.
@@ -49,17 +51,17 @@ Rule: Nuxt UI is the official component system. Do not introduce Vuetify.
 
 For new features and gradual refactors, route through domain modules:
 
-- Route pages in `pages/` should map to module screens in `modules/{Domain}/screens/`.
+- Route pages in `app/pages/` should map to module screens in `modules/{Domain}/screens/`.
 - Keep pages thin: route/meta/auth/orchestration only.
-- Place feature UI and logic in module folders, not in `pages/`.
+- Place feature UI and logic in module folders, not in `app/pages/`.
 
 Reference route mapping style:
 
-- `pages/admin/users/index.vue` -> `modules/AdminUsers/screens/UsersListScreen.vue`
-- `pages/admin/users/[id].vue` -> `modules/AdminUsers/screens/UserDetailsScreen.vue`
-- `pages/admin/tags/index.vue` -> `modules/AdminUsers/screens/TagsListScreen.vue`
-- `pages/admin/tags/[id].vue` -> `modules/AdminUsers/screens/TagDetailsScreen.vue`
-- `pages/admin/settings.vue` -> `modules/AdminSettings/screens/SettingsScreen.vue`
+- `app/pages/admin/users/index.vue` -> `modules/AdminUsers/screens/UsersListScreen.vue`
+- `app/pages/admin/users/[id].vue` -> `modules/AdminUsers/screens/UserDetailsScreen.vue`
+- `app/pages/admin/tags/index.vue` -> `modules/AdminUsers/screens/TagsListScreen.vue`
+- `app/pages/admin/tags/[id].vue` -> `modules/AdminUsers/screens/TagDetailsScreen.vue`
+- `app/pages/admin/settings.vue` -> `modules/AdminSettings/screens/SettingsScreen.vue`
 
 ## 6. DDD-Lite Rules
 
