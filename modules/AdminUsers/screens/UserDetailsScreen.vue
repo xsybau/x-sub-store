@@ -1,164 +1,34 @@
 <template>
   <div v-if="user">
-    <div class="mb-6 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <h2 class="text-2xl font-bold">{{ user.label }}</h2>
-        <UBadge :color="user.isActive ? 'success' : 'error'" variant="subtle">
-          {{
-            user.isActive
-              ? t("common.status.active")
-              : t("common.status.inactive")
-          }}
-        </UBadge>
-      </div>
+    <UserDetailsHeader
+      :user="user"
+      :preview-loading="previewLoading"
+      :toggling-status="togglingStatus"
+      @preview="preview"
+      @toggle-status="toggleUserStatus"
+      @delete-user="deleteDialogOpen = true"
+    />
 
-      <div class="flex space-x-2">
-        <UButton variant="soft" :loading="previewLoading" @click="preview">
-          {{ t("adminUsers.userDetails.previewSubscriptionButton") }}
-        </UButton>
-        <UButton
-          variant="soft"
-          :color="user.isActive ? 'warning' : 'success'"
-          :loading="togglingStatus"
-          :icon="
-            user.isActive
-              ? 'i-heroicons-pause-circle'
-              : 'i-heroicons-play-circle'
-          "
-          @click="toggleUserStatus"
-        >
-          {{
-            user.isActive
-              ? t("adminUsers.userDetails.deactivateButton")
-              : t("adminUsers.userDetails.activateButton")
-          }}
-        </UButton>
-        <UButton color="error" @click="deleteDialogOpen = true">
-          {{ t("adminUsers.userDetails.deleteUserButton") }}
-        </UButton>
-      </div>
-    </div>
+    <UserDescriptionCard
+      v-model:description="editableDescription"
+      :is-dirty="isDescriptionDirty"
+      :loading="savingDescription"
+      @save="saveDescription"
+    />
 
-    <UCard class="mb-8">
-      <template #header>
-        <h3 class="text-lg font-bold">
-          {{ t("adminUsers.userDetails.cards.adminNotes") }}
-        </h3>
-      </template>
+    <UserTagsCard
+      v-model:tag-ids="editableTagIds"
+      :tags="tags"
+      :status-text="tagSaveStatusText"
+      :get-tag-name="getTagName"
+    />
 
-      <div class="space-y-3">
-        <UFormField
-          :label="t('adminUsers.userDetails.fields.descriptionAdminOnly')"
-        >
-          <UTextarea
-            v-model="editableDescription"
-            class="w-full"
-            :rows="4"
-            :maxlength="500"
-            :placeholder="
-              t('adminUsers.userDetails.fields.descriptionPlaceholder')
-            "
-          />
-        </UFormField>
-
-        <div class="flex items-center justify-between">
-          <p class="text-xs text-muted">
-            {{ t("adminUsers.userDetails.notes.adminOnlyVisibility") }}
-          </p>
-          <UButton
-            size="sm"
-            :loading="savingDescription"
-            :disabled="!isDescriptionDirty"
-            @click="saveDescription"
-          >
-            {{ t("adminUsers.userDetails.buttons.saveDescription") }}
-          </UButton>
-        </div>
-      </div>
-    </UCard>
-
-    <UCard class="mb-8">
-      <template #header>
-        <h3 class="text-lg font-bold">
-          {{ t("adminUsers.userDetails.cards.userTags") }}
-        </h3>
-      </template>
-
-      <div class="space-y-3">
-        <div class="flex flex-wrap gap-2">
-          <UBadge
-            v-for="tagId in editableTagIds"
-            :key="`selected-tag-${tagId}`"
-            color="neutral"
-            variant="subtle"
-          >
-            {{ getTagName(tagId) }}
-          </UBadge>
-          <span v-if="!editableTagIds.length" class="text-sm text-muted">
-            {{ t("common.labels.noValue") }}
-          </span>
-        </div>
-
-        <UFormField :label="t('adminUsers.userDetails.fields.assignedTags')">
-          <UInputMenu
-            v-model="editableTagIds"
-            :items="tags"
-            label-key="name"
-            value-key="_id"
-            :multiple="true"
-            :placeholder="
-              t('adminUsers.userDetails.fields.userTagsPlaceholder')
-            "
-            class="w-full"
-          />
-        </UFormField>
-
-        <div class="flex justify-end">
-          <p class="text-xs text-muted">
-            {{ tagSaveStatusText }}
-          </p>
-        </div>
-      </div>
-    </UCard>
-
-    <UCard class="mb-8">
-      <template #header>
-        <h3 class="text-lg font-bold">
-          {{ t("adminUsers.userDetails.cards.subscriptionUrl") }}
-        </h3>
-      </template>
-
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-        <UTooltip :text="subUrl">
-          <p
-            class="min-w-0 flex-1 truncate rounded-md border border-accented/60 bg-muted/30 px-3 py-2 font-mono text-xs text-toned"
-          >
-            {{ subUrl }}
-          </p>
-        </UTooltip>
-
-        <div class="flex gap-2">
-          <UButton icon="i-heroicons-clipboard" @click="copyUrl">
-            {{ t("adminUsers.userDetails.buttons.copy") }}
-          </UButton>
-          <UButton
-            color="warning"
-            icon="i-heroicons-arrow-path"
-            @click="rotateDialogOpen = true"
-          >
-            {{ t("adminUsers.userDetails.buttons.rotateToken") }}
-          </UButton>
-        </div>
-      </div>
-
-      <p class="mt-2 font-mono text-xs text-gray-500">
-        {{
-          t("adminUsers.userDetails.fields.tokenLabel", {
-            token: user.token || "",
-          })
-        }}
-      </p>
-    </UCard>
+    <UserSubscriptionCard
+      :sub-url="subUrl"
+      :token="user.token"
+      @copy="copyUrl"
+      @rotate="rotateDialogOpen = true"
+    />
 
     <div class="grid grid-cols-1 gap-8">
       <UCard>
@@ -180,120 +50,13 @@
       </UCard>
     </div>
 
-    <UModal
+    <UserPreviewModal
       v-model:open="showPreview"
-      fullscreen
-      :title="t('adminUsers.userDetails.previewModal.title')"
-      :description="t('adminUsers.userDetails.previewModal.description')"
-    >
-      <template #content>
-        <div class="flex h-full flex-col p-6">
-          <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-xl font-bold">
-              {{ t("adminUsers.userDetails.previewModal.heading") }}
-            </h3>
-            <UButton
-              variant="ghost"
-              icon="i-heroicons-x-mark"
-              @click="showPreview = false"
-            />
-          </div>
-
-          <div v-if="previewLoading" class="flex-1 space-y-3">
-            <USkeleton class="h-10 w-full" />
-            <USkeleton class="h-24 w-full" />
-            <USkeleton class="h-64 w-full" />
-          </div>
-
-          <div v-else-if="previewData" class="flex-1 space-y-4 overflow-auto">
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <UCard>
-                <h4 class="font-bold text-gray-500">
-                  {{ t("adminUsers.userDetails.previewModal.totalNodes") }}
-                </h4>
-                <p class="text-2xl">{{ previewData.stats.uniqueNodes }}</p>
-              </UCard>
-              <UCard>
-                <h4 class="font-bold text-gray-500">
-                  {{ t("adminUsers.userDetails.previewModal.rawNodes") }}
-                </h4>
-                <p class="text-2xl">{{ previewData.stats.totalRawNodes }}</p>
-              </UCard>
-              <UCard>
-                <h4 class="font-bold text-gray-500">
-                  {{ t("adminUsers.userDetails.previewModal.upstreams") }}
-                </h4>
-                <p class="text-2xl">{{ previewData.stats.upstreams }}</p>
-              </UCard>
-            </div>
-
-            <UCard>
-              <template #header>
-                <h4 class="font-bold">
-                  {{ t("adminUsers.userDetails.previewModal.upstreamStatus") }}
-                </h4>
-              </template>
-              <UTable
-                class="table-fixed"
-                :data="previewData.upstreamStatus"
-                :columns="previewStatusColumns"
-              >
-                <template #source-cell="{ row }">
-                  <UTooltip :text="row.original.source">
-                    <p class="max-w-40 truncate font-medium sm:max-w-56">
-                      {{ row.original.source }}
-                    </p>
-                  </UTooltip>
-                </template>
-
-                <template #status-cell="{ row }">
-                  <UBadge
-                    :color="row.original.status === 'OK' ? 'success' : 'error'"
-                    variant="subtle"
-                  >
-                    {{
-                      row.original.status === "OK"
-                        ? t("common.status.healthy")
-                        : t("common.status.issue")
-                    }}
-                  </UBadge>
-                </template>
-
-                <template #error-cell="{ row }">
-                  <span v-if="!row.original.error" class="text-xs text-muted">
-                    {{ t("common.labels.noValue") }}
-                  </span>
-                  <UTooltip v-else :text="row.original.error">
-                    <p
-                      class="max-w-44 truncate font-mono text-xs text-error sm:max-w-[18rem]"
-                    >
-                      {{ row.original.error }}
-                    </p>
-                  </UTooltip>
-                </template>
-              </UTable>
-            </UCard>
-
-            <UCard>
-              <template #header>
-                <div class="flex justify-between">
-                  <h4 class="font-bold">
-                    {{ t("adminUsers.userDetails.previewModal.nodes") }}
-                  </h4>
-                  <UButton size="xs" @click="copyNodes">
-                    {{ t("adminUsers.userDetails.buttons.copyNodes") }}
-                  </UButton>
-                </div>
-              </template>
-              <pre
-                class="max-h-96 overflow-auto rounded bg-gray-100 p-4 text-xs dark:bg-gray-800"
-                >{{ previewData.nodes.join("\n") }}</pre
-              >
-            </UCard>
-          </div>
-        </div>
-      </template>
-    </UModal>
+      :preview-loading="previewLoading"
+      :preview-data="previewData"
+      :preview-status-columns="previewStatusColumns"
+      @copy-nodes="copyNodes"
+    />
 
     <ConfirmDialog
       v-model:open="rotateDialogOpen"
@@ -319,10 +82,16 @@
 
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
-import type { FetchError } from "ofetch";
 import ConfirmDialog from "~/components/ConfirmDialog.vue";
 import StaticNodeManager from "~/modules/AdminSources/components/StaticNodeManager.vue";
 import UpstreamManager from "~/modules/AdminSources/components/UpstreamManager.vue";
+import UserDescriptionCard from "~/modules/AdminUsers/components/UserDescriptionCard.vue";
+import UserDetailsHeader from "~/modules/AdminUsers/components/UserDetailsHeader.vue";
+import UserPreviewModal from "~/modules/AdminUsers/components/UserPreviewModal.vue";
+import UserSubscriptionCard from "~/modules/AdminUsers/components/UserSubscriptionCard.vue";
+import UserTagsCard from "~/modules/AdminUsers/components/UserTagsCard.vue";
+import { useApiErrorMessage } from "~/modules/AdminUsers/composables/useApiErrorMessage";
+import { useSubscriptionUrlBuilder } from "~/modules/AdminUsers/composables/useSubscriptionUrlBuilder";
 import type { TagItem } from "~/modules/AdminUsers/types/tags";
 import type {
   UserSubscriptionPreview,
@@ -339,60 +108,9 @@ import {
 
 const route = useRoute();
 const toast = useToast();
-const runtimeConfig = useRuntimeConfig();
 const { t } = useI18n();
-
-const normalizeBaseUrl = (value: string): string => {
-  return value.trim().replace(/\/+$/, "");
-};
-
-const isPrivateIpv4Host = (hostname: string): boolean => {
-  const octets = hostname.split(".");
-  if (octets.length !== 4) {
-    return false;
-  }
-
-  const values = octets.map((octet) => Number.parseInt(octet, 10));
-  if (values.some((value) => Number.isNaN(value) || value < 0 || value > 255)) {
-    return false;
-  }
-
-  const first = values[0];
-  const second = values[1];
-  if (first === undefined || second === undefined) {
-    return false;
-  }
-
-  return (
-    first === 10 ||
-    first === 127 ||
-    (first === 169 && second === 254) ||
-    (first === 172 && second >= 16 && second <= 31) ||
-    (first === 192 && second === 168)
-  );
-};
-
-const isPrivateIpv6Host = (hostname: string): boolean => {
-  const normalized = hostname.toLowerCase();
-  return (
-    normalized === "::1" ||
-    normalized.startsWith("fc") ||
-    normalized.startsWith("fd") ||
-    normalized.startsWith("fe80:")
-  );
-};
-
-const shouldUseHttpSubscriptionUrl = (hostname: string): boolean => {
-  const normalized = hostname.toLowerCase();
-  return (
-    normalized === "localhost" ||
-    normalized.endsWith(".localhost") ||
-    normalized.endsWith(".local") ||
-    normalized.endsWith(".test") ||
-    isPrivateIpv4Host(normalized) ||
-    isPrivateIpv6Host(normalized)
-  );
-};
+const { getErrorMessage } = useApiErrorMessage();
+const { buildSubscriptionUrl } = useSubscriptionUrlBuilder();
 
 const userId = computed(() => {
   const value = route.params.id;
@@ -526,46 +244,13 @@ const previewStatusColumns = computed(() => [
   },
 ]);
 
-const getErrorMessage = (error: unknown): string => {
-  if (typeof error !== "object" || !error) {
-    return t("common.errors.unexpected");
-  }
-
-  const candidate = error as FetchError;
-  const message =
-    candidate.data && typeof candidate.data === "object"
-      ? (candidate.data as { message?: string }).message
-      : undefined;
-
-  return message || candidate.message || t("common.errors.unexpected");
-};
-
 const subUrl = computed(() => {
-  if (!user.value) {
-    return "";
-  }
-
-  const token = user.value.token;
+  const token = user.value?.token;
   if (!token) {
     return "";
   }
 
-  const configuredBaseUrl = normalizeBaseUrl(
-    runtimeConfig.public.subscriptionBaseUrl,
-  );
-  if (configuredBaseUrl) {
-    return `${configuredBaseUrl}/subs/${token}`;
-  }
-
-  if (import.meta.client) {
-    if (shouldUseHttpSubscriptionUrl(window.location.hostname)) {
-      return `http://${window.location.hostname}/subs/${token}`;
-    }
-
-    return `${window.location.origin}/subs/${token}`;
-  }
-
-  return `/subs/${token}`;
+  return buildSubscriptionUrl(token);
 });
 
 const copyUrl = async () => {

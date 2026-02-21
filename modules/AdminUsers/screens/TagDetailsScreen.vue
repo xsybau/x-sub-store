@@ -1,160 +1,34 @@
 <template>
   <div v-if="tag">
-    <div
-      class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
-    >
-      <div class="flex items-center gap-3">
-        <h2 class="text-2xl font-bold">{{ tag.name }}</h2>
-        <UBadge :color="tag.isDefault ? 'success' : 'neutral'" variant="subtle">
-          {{
-            tag.isDefault
-              ? t("common.status.default")
-              : t("common.status.optional")
-          }}
-        </UBadge>
-      </div>
+    <TagDetailsHeader
+      :tag="tag"
+      :saving-tag="savingTag"
+      @save="saveTag"
+      @delete-tag="deleteDialogOpen = true"
+    />
 
-      <div class="flex gap-2">
-        <UButton variant="soft" :loading="savingTag" @click="saveTag">
-          {{ t("adminUsers.tagDetails.saveTagButton") }}
-        </UButton>
-        <UButton color="error" variant="soft" @click="deleteDialogOpen = true">
-          {{ t("adminUsers.tagDetails.deleteTagButton") }}
-        </UButton>
-      </div>
-    </div>
+    <TagSettingsCard v-model:state="editState" />
 
-    <UCard class="mb-8">
-      <template #header>
-        <h3 class="text-lg font-bold">
-          {{ t("adminUsers.tagDetails.headings.tagSettings") }}
-        </h3>
-      </template>
+    <TagUsersTableCard
+      :users="users"
+      :columns="userColumns"
+      :loading="usersPending"
+    />
 
-      <div class="space-y-4">
-        <UFormField :label="t('adminUsers.tagDetails.fields.tagName')">
-          <UInput v-model="editState.name" required />
-        </UFormField>
-        <UCheckbox
-          v-model="editState.isDefault"
-          :label="t('adminUsers.tagDetails.fields.defaultForNewUsers')"
-        />
-      </div>
-    </UCard>
+    <TagApplyUsersCard
+      v-model:selected-user-ids="selectedApplyUserIds"
+      :all-user-options="allUserOptions"
+      :all-users-count="allUsers.length"
+      :applying-selected-users="applyingSelectedUsers"
+      :applying-all-users="applyingAllUsers"
+      @apply-selected-users="applyToSelectedUsers"
+      @apply-all-users="applyToAllUsers"
+    />
 
-    <UCard class="mb-8">
-      <template #header>
-        <h3 class="text-lg font-bold">
-          {{ t("adminUsers.tagDetails.headings.usersInThisTag") }}
-        </h3>
-      </template>
-
-      <UTable :data="users" :columns="userColumns" :loading="usersPending">
-        <template #isActive-cell="{ row }">
-          <UBadge :color="row.original.isActive ? 'success' : 'error'">
-            {{
-              row.original.isActive
-                ? t("common.status.active")
-                : t("common.status.inactive")
-            }}
-          </UBadge>
-        </template>
-
-        <template #actions-cell="{ row }">
-          <UButton
-            :to="`/admin/users/${row.original._id}`"
-            size="xs"
-            variant="ghost"
-            icon="i-heroicons-eye"
-          />
-        </template>
-      </UTable>
-    </UCard>
-
-    <UCard class="mb-8">
-      <template #header>
-        <h3 class="text-lg font-bold">
-          {{ t("adminUsers.tagDetails.headings.applyTagToExistingUsers") }}
-        </h3>
-      </template>
-
-      <div class="space-y-4">
-        <UFormField :label="t('adminUsers.tagDetails.fields.selectUsersBatch')">
-          <UInputMenu
-            v-model="selectedApplyUserIds"
-            :items="allUserOptions"
-            label-key="label"
-            value-key="_id"
-            :multiple="true"
-            class="w-full"
-            :placeholder="
-              t('adminUsers.tagDetails.fields.selectUsersPlaceholder')
-            "
-          />
-          <p class="mt-1 text-xs text-muted">
-            {{
-              t("adminUsers.tagDetails.fields.matchingUsersSummary", {
-                total: allUsers.length,
-                selected: selectedApplyUserIds.length,
-              })
-            }}
-          </p>
-        </UFormField>
-
-        <div class="flex flex-wrap gap-2">
-          <UButton
-            color="primary"
-            :loading="applyingSelectedUsers"
-            :disabled="!selectedApplyUserIds.length || applyingAllUsers"
-            @click="applyToSelectedUsers"
-          >
-            {{ t("adminUsers.tagDetails.buttons.applyToSelectedUsers") }}
-          </UButton>
-          <UButton
-            color="primary"
-            variant="soft"
-            :loading="applyingAllUsers"
-            :disabled="applyingSelectedUsers || !allUsers.length"
-            @click="applyToAllUsers"
-          >
-            {{ t("adminUsers.tagDetails.buttons.applyToAllExistingUsers") }}
-          </UButton>
-        </div>
-      </div>
-    </UCard>
-
-    <UCard class="mb-8">
-      <template #header>
-        <h3 class="text-lg font-bold">
-          {{ t("adminUsers.tagDetails.headings.bulkUserActions") }}
-        </h3>
-      </template>
-
-      <div class="flex flex-wrap gap-2">
-        <UButton
-          color="warning"
-          :loading="runningAction === 'DEACTIVATE_USERS'"
-          @click="openActionDialog('DEACTIVATE_USERS')"
-        >
-          {{ t("adminUsers.tagDetails.buttons.deactivateUsers") }}
-        </UButton>
-        <UButton
-          color="warning"
-          variant="soft"
-          :loading="runningAction === 'ROTATE_TOKENS'"
-          @click="openActionDialog('ROTATE_TOKENS')"
-        >
-          {{ t("adminUsers.tagDetails.buttons.rotateTokens") }}
-        </UButton>
-        <UButton
-          color="error"
-          :loading="runningAction === 'DELETE_USERS'"
-          @click="openActionDialog('DELETE_USERS')"
-        >
-          {{ t("adminUsers.tagDetails.buttons.deleteUsers") }}
-        </UButton>
-      </div>
-    </UCard>
+    <TagBulkActionsCard
+      :running-action="runningAction"
+      @open-action-dialog="openActionDialog"
+    />
 
     <div class="grid grid-cols-1 gap-8">
       <UCard>
@@ -200,10 +74,16 @@
 
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
-import type { FetchError } from "ofetch";
 import ConfirmDialog from "~/components/ConfirmDialog.vue";
 import StaticNodeManager from "~/modules/AdminSources/components/StaticNodeManager.vue";
 import UpstreamManager from "~/modules/AdminSources/components/UpstreamManager.vue";
+import TagApplyUsersCard from "~/modules/AdminUsers/components/TagApplyUsersCard.vue";
+import TagBulkActionsCard from "~/modules/AdminUsers/components/TagBulkActionsCard.vue";
+import TagDetailsHeader from "~/modules/AdminUsers/components/TagDetailsHeader.vue";
+import TagSettingsCard from "~/modules/AdminUsers/components/TagSettingsCard.vue";
+import TagUsersTableCard from "~/modules/AdminUsers/components/TagUsersTableCard.vue";
+import { useApiErrorMessage } from "~/modules/AdminUsers/composables/useApiErrorMessage";
+import type { TagEditState } from "~/modules/AdminUsers/types/forms";
 import type {
   TagBulkAction,
   TagItem,
@@ -219,14 +99,10 @@ import {
 } from "~/modules/AdminUsers/utils/tagsApi";
 import { listUsersApi } from "~/modules/AdminUsers/utils/usersApi";
 
-interface TagEditState {
-  name: string;
-  isDefault: boolean;
-}
-
 const route = useRoute();
 const toast = useToast();
 const { t } = useI18n();
+const { getErrorMessage } = useApiErrorMessage();
 
 const requestHeaders = import.meta.server
   ? useRequestHeaders(["cookie"])
@@ -361,20 +237,6 @@ useHead(() => ({
     ? t("adminUsers.tagDetails.pageTitle.withName", { name: tag.value.name })
     : t("adminUsers.tagDetails.pageTitle.fallback"),
 }));
-
-const getErrorMessage = (error: unknown): string => {
-  if (typeof error !== "object" || !error) {
-    return t("common.errors.unexpected");
-  }
-
-  const candidate = error as FetchError;
-  const message =
-    candidate.data && typeof candidate.data === "object"
-      ? (candidate.data as { message?: string }).message
-      : undefined;
-
-  return message || candidate.message || t("common.errors.unexpected");
-};
 
 const saveTag = async () => {
   if (!tag.value) {

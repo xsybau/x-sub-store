@@ -1,123 +1,34 @@
 <template>
   <div>
-    <div class="mb-6 flex items-center justify-between">
-      <h2 class="text-2xl font-bold">{{ t("adminUsers.tagsList.title") }}</h2>
-      <UButton @click="createDialogOpen = true">
-        {{ t("adminUsers.tagsList.addTagButton") }}
-      </UButton>
-    </div>
+    <ListScreenHeader
+      :title="t('adminUsers.tagsList.title')"
+      :action-label="t('adminUsers.tagsList.addTagButton')"
+      @action="createDialogOpen = true"
+    />
 
-    <UTable :data="tags" :columns="columns" :loading="pending">
-      <template #isDefault-cell="{ row }">
-        <div class="flex items-center gap-2">
-          <UBadge :color="row.original.isDefault ? 'success' : 'neutral'">
-            {{
-              row.original.isDefault
-                ? t("common.status.default")
-                : t("common.status.optional")
-            }}
-          </UBadge>
-          <UButton
-            size="xs"
-            variant="ghost"
-            :icon="
-              row.original.isDefault
-                ? 'i-heroicons-star-solid'
-                : 'i-heroicons-star'
-            "
-            :loading="updatingDefaultTagId === row.original._id"
-            @click="toggleDefault(row.original)"
-          />
-        </div>
-      </template>
+    <TagsListTable
+      :tags="tags"
+      :columns="columns"
+      :loading="pending"
+      :updating-default-tag-id="updatingDefaultTagId"
+      @toggle-default="toggleDefault"
+      @open-edit="openEditDialog"
+      @open-delete="openDeleteDialog"
+    />
 
-      <template #actions-cell="{ row }">
-        <div class="flex items-center gap-2">
-          <UButton
-            :to="`/admin/tags/${row.original._id}`"
-            size="xs"
-            variant="soft"
-          >
-            {{ t("adminUsers.tagsList.manageButton") }}
-          </UButton>
-          <UButton
-            size="xs"
-            variant="ghost"
-            icon="i-heroicons-pencil-square"
-            @click="openEditDialog(row.original)"
-          />
-          <UButton
-            size="xs"
-            variant="ghost"
-            color="error"
-            icon="i-heroicons-trash"
-            @click="openDeleteDialog(row.original._id)"
-          />
-        </div>
-      </template>
-    </UTable>
-
-    <UModal
+    <TagCreateModal
       v-model:open="createDialogOpen"
-      :title="t('adminUsers.tagsList.createModal.title')"
-      :description="t('adminUsers.tagsList.createModal.description')"
-    >
-      <template #content>
-        <div class="p-6">
-          <form class="w-full space-y-4" @submit.prevent="createTag">
-            <UFormField
-              :label="t('adminUsers.tagsList.createModal.tagNameLabel')"
-              class="w-full"
-            >
-              <UInput v-model="newTag.name" class="w-full" required />
-            </UFormField>
-            <UCheckbox
-              v-model="newTag.isDefault"
-              :label="t('adminUsers.tagsList.createModal.defaultCheckbox')"
-            />
-            <div class="flex justify-end gap-2">
-              <UButton variant="ghost" @click="createDialogOpen = false">
-                {{ t("common.actions.cancel") }}
-              </UButton>
-              <UButton type="submit" :loading="creating">
-                {{ t("common.actions.create") }}
-              </UButton>
-            </div>
-          </form>
-        </div>
-      </template>
-    </UModal>
+      :loading="creating"
+      @submit="createTag"
+    />
 
-    <UModal
+    <TagEditModal
       v-model:open="editDialogOpen"
-      :title="t('adminUsers.tagsList.editModal.title')"
-      :description="t('adminUsers.tagsList.editModal.description')"
-    >
-      <template #content>
-        <div class="p-6">
-          <form class="w-full space-y-4" @submit.prevent="updateTag">
-            <UFormField
-              :label="t('adminUsers.tagsList.editModal.tagNameLabel')"
-              class="w-full"
-            >
-              <UInput v-model="editTag.name" class="w-full" required />
-            </UFormField>
-            <UCheckbox
-              v-model="editTag.isDefault"
-              :label="t('adminUsers.tagsList.editModal.defaultCheckbox')"
-            />
-            <div class="flex justify-end gap-2">
-              <UButton variant="ghost" @click="closeEditDialog">
-                {{ t("common.actions.cancel") }}
-              </UButton>
-              <UButton type="submit" :loading="updating">
-                {{ t("common.actions.save") }}
-              </UButton>
-            </div>
-          </form>
-        </div>
-      </template>
-    </UModal>
+      :loading="updating"
+      :initial-name="editingTag?.name || ''"
+      :initial-is-default="editingTag?.isDefault || false"
+      @submit="updateTag"
+    />
 
     <ConfirmDialog
       v-model:open="deleteDialogOpen"
@@ -133,8 +44,13 @@
 
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
-import type { FetchError } from "ofetch";
 import ConfirmDialog from "~/components/ConfirmDialog.vue";
+import ListScreenHeader from "~/modules/AdminUsers/components/ListScreenHeader.vue";
+import TagCreateModal from "~/modules/AdminUsers/components/TagCreateModal.vue";
+import TagEditModal from "~/modules/AdminUsers/components/TagEditModal.vue";
+import TagsListTable from "~/modules/AdminUsers/components/TagsListTable.vue";
+import { useApiErrorMessage } from "~/modules/AdminUsers/composables/useApiErrorMessage";
+import type { TagModalPayload } from "~/modules/AdminUsers/types/forms";
 import type { TagItem } from "~/modules/AdminUsers/types/tags";
 import {
   createTagApi,
@@ -143,12 +59,8 @@ import {
   updateTagApi,
 } from "~/modules/AdminUsers/utils/tagsApi";
 
-interface TagFormState {
-  name: string;
-  isDefault: boolean;
-}
-
 const { t } = useI18n();
+const { getErrorMessage } = useApiErrorMessage();
 
 const columns = computed(() => [
   { accessorKey: "name", header: t("adminUsers.tagsList.columns.tag") },
@@ -180,12 +92,10 @@ const toast = useToast();
 
 const createDialogOpen = ref(false);
 const creating = ref(false);
-const newTag = ref<TagFormState>({ name: "", isDefault: false });
 
 const editDialogOpen = ref(false);
 const updating = ref(false);
-const editingTagId = ref<string | null>(null);
-const editTag = ref<TagFormState>({ name: "", isDefault: false });
+const editingTag = ref<TagItem | null>(null);
 
 const updatingDefaultTagId = ref<string | null>(null);
 
@@ -193,26 +103,11 @@ const deleteDialogOpen = ref(false);
 const deleting = ref(false);
 const deletingTagId = ref<string | null>(null);
 
-const getErrorMessage = (error: unknown): string => {
-  if (typeof error !== "object" || !error) {
-    return t("common.errors.unexpected");
-  }
-
-  const candidate = error as FetchError;
-  const message =
-    candidate.data && typeof candidate.data === "object"
-      ? (candidate.data as { message?: string }).message
-      : undefined;
-
-  return message || candidate.message || t("common.errors.unexpected");
-};
-
-const createTag = async () => {
+const createTag = async (payload: TagModalPayload) => {
   creating.value = true;
   try {
-    await createTagApi(newTag.value);
+    await createTagApi(payload);
     createDialogOpen.value = false;
-    newTag.value = { name: "", isDefault: false };
     await refresh();
     toast.add({
       title: t("adminUsers.tagsList.toasts.tagCreated"),
@@ -230,28 +125,23 @@ const createTag = async () => {
 };
 
 const openEditDialog = (tag: TagItem) => {
-  editingTagId.value = tag._id;
-  editTag.value = {
-    name: tag.name,
-    isDefault: tag.isDefault,
-  };
+  editingTag.value = tag;
   editDialogOpen.value = true;
 };
 
 const closeEditDialog = () => {
-  editingTagId.value = null;
-  editTag.value = { name: "", isDefault: false };
+  editingTag.value = null;
   editDialogOpen.value = false;
 };
 
-const updateTag = async () => {
-  if (!editingTagId.value) {
+const updateTag = async (payload: TagModalPayload) => {
+  if (!editingTag.value?._id) {
     return;
   }
 
   updating.value = true;
   try {
-    await updateTagApi(editingTagId.value, editTag.value);
+    await updateTagApi(editingTag.value._id, payload);
     await refresh();
     closeEditDialog();
     toast.add({

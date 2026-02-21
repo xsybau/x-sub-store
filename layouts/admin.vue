@@ -3,105 +3,17 @@
     class="min-h-screen bg-linear-to-br from-violet-50 via-white to-indigo-100 dark:from-gray-950 dark:via-gray-900 dark:to-violet-950"
   >
     <div class="flex min-h-screen lg:flex-row">
-      <div
-        v-if="mobileMenuOpen"
-        class="fixed inset-0 z-40 bg-black/45 backdrop-blur-[2px] lg:hidden"
-        @click="mobileMenuOpen = false"
+      <AdminSidebar
+        :mobile-menu-open="mobileMenuOpen"
+        :is-rtl="isRtl"
+        :links="links"
+        :current-path="route.path"
+        :locale="locale"
+        :locale-options="localeOptions"
+        @close-mobile-menu="mobileMenuOpen = false"
+        @update-locale="handleLocaleUpdate"
+        @logout="logout"
       />
-
-      <aside
-        class="fixed inset-y-0 z-50 h-screen max-h-screen w-[84vw] max-w-sm overflow-hidden border-default/70 bg-white/90 backdrop-blur-md transition-transform duration-300 dark:bg-gray-900/90 flex flex-col lg:sticky lg:top-0 lg:z-10 lg:w-80 lg:max-w-none lg:translate-x-0"
-        :class="[asideSideClass, mobileMenuAsideClass]"
-      >
-        <div class="p-6 border-b border-default/70">
-          <div class="flex items-start justify-between gap-3">
-            <div class="flex items-center gap-3">
-              <div
-                class="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-primary text-inverted shadow-sm"
-              >
-                <UIcon name="i-heroicons-command-line" class="size-5" />
-              </div>
-              <div>
-                <p
-                  class="text-[11px] uppercase tracking-[0.2em] text-primary/80"
-                >
-                  {{ t("shell.admin.brandCaption") }}
-                </p>
-                <h1 class="text-xl font-semibold text-highlighted">
-                  {{ t("shell.admin.brandTitle") }}
-                </h1>
-              </div>
-            </div>
-            <UButton
-              class="lg:hidden"
-              variant="ghost"
-              color="neutral"
-              icon="i-heroicons-x-mark"
-              :aria-label="t('shell.admin.closeMenuAria')"
-              @click="mobileMenuOpen = false"
-            />
-          </div>
-          <p class="mt-3 text-xs text-muted">
-            {{ t("shell.admin.subtitle") }}
-          </p>
-        </div>
-
-        <nav class="p-4 flex-1 space-y-2 overflow-y-auto">
-          <NuxtLink
-            v-for="item in links"
-            :key="item.to"
-            :to="item.to"
-            class="group flex items-start gap-3 rounded-2xl border px-3 py-3 transition"
-            :class="
-              isActive(item.to)
-                ? 'border-primary/40 bg-primary/10 shadow-sm'
-                : 'border-default/70 bg-default/40 hover:border-primary/40 hover:bg-primary/5'
-            "
-            @click="mobileMenuOpen = false"
-          >
-            <div
-              class="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-2xl border border-default/70 bg-white/75 dark:bg-gray-900/70"
-              :class="
-                isActive(item.to)
-                  ? 'text-primary'
-                  : 'text-muted group-hover:text-primary'
-              "
-            >
-              <UIcon :name="item.icon" class="size-5" />
-            </div>
-            <div class="min-w-0">
-              <p class="font-semibold leading-tight text-highlighted">
-                {{ item.label }}
-              </p>
-              <p class="mt-1 truncate text-xs text-muted">
-                {{ item.description }}
-              </p>
-            </div>
-          </NuxtLink>
-        </nav>
-
-        <div class="p-4 border-t border-default/70">
-          <div
-            class="rounded-2xl border border-default/70 bg-default/40 p-3 space-y-3"
-          >
-            <UFormField :label="t('shell.admin.languageLabel')" class="w-full">
-              <UInputMenu
-                v-model="selectedLocale"
-                :items="localeOptions"
-                label-key="label"
-                value-key="value"
-                class="w-full"
-              />
-            </UFormField>
-            <UBadge color="primary" variant="subtle">
-              {{ t("shell.admin.badge") }}
-            </UBadge>
-            <UButton variant="soft" color="error" block @click="logout">
-              {{ t("common.actions.logout") }}
-            </UButton>
-          </div>
-        </div>
-      </aside>
 
       <main class="flex-1 min-w-0 overflow-x-hidden">
         <div class="mx-auto max-w-7xl p-4 sm:p-8">
@@ -110,33 +22,24 @@
       </main>
     </div>
 
-    <div
-      class="fixed inset-x-0 bottom-5 z-40 flex justify-center px-4 lg:hidden"
-    >
-      <UButton
-        color="primary"
-        variant="solid"
-        class="rounded-full px-5 py-2 shadow-lg shadow-primary/20"
-        @click="mobileMenuOpen = !mobileMenuOpen"
-      >
-        <UIcon
-          :name="mobileMenuOpen ? 'i-heroicons-x-mark' : 'i-heroicons-bars-3'"
-          class="size-4"
-        />
-        <span>
-          {{
-            mobileMenuOpen
-              ? t("shell.admin.mobileMenu.close")
-              : t("shell.admin.mobileMenu.open")
-          }}
-        </span>
-      </UButton>
-    </div>
+    <AdminMobileMenuToggle
+      :open="mobileMenuOpen"
+      @toggle="mobileMenuOpen = !mobileMenuOpen"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
+import AdminMobileMenuToggle from "~/components/admin/AdminMobileMenuToggle.vue";
+import AdminSidebar from "~/components/admin/AdminSidebar.vue";
+
+interface AdminNavLink {
+  label: string;
+  to: string;
+  icon: string;
+  description: string;
+}
 
 const route = useRoute();
 const { t } = useI18n();
@@ -144,14 +47,7 @@ const { logout } = useAuth();
 const mobileMenuOpen = ref(false);
 const { locale, setLocale, isRtl, localeOptions } = useAppLocale();
 
-const selectedLocale = computed({
-  get: () => locale.value,
-  set: (value: unknown) => {
-    setLocale(value);
-  },
-});
-
-const links = computed(() => [
+const links = computed<AdminNavLink[]>(() => [
   {
     label: t("shell.admin.nav.users.label"),
     to: "/admin/users",
@@ -172,24 +68,8 @@ const links = computed(() => [
   },
 ]);
 
-const asideSideClass = computed(() => {
-  return isRtl.value
-    ? "right-0 border-l lg:right-auto"
-    : "left-0 border-r lg:left-auto";
-});
-
-const mobileMenuAsideClass = computed(() => {
-  if (mobileMenuOpen.value) {
-    return "translate-x-0";
-  }
-
-  return isRtl.value
-    ? "translate-x-full lg:translate-x-0"
-    : "-translate-x-full lg:translate-x-0";
-});
-
-const isActive = (to: string) => {
-  return route.path === to || route.path.startsWith(`${to}/`);
+const handleLocaleUpdate = (value: unknown) => {
+  setLocale(value);
 };
 
 watch(
